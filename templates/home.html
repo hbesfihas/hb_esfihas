@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Cardápio | HB Esfihas{% endblock %}
+{% load static %}
+
+{% block content %}
+<h2 class="mb-4 text-center">Nosso Cardápio</h2>
+
+<div class="accordion" id="accordionCategorias">
+    {% for categoria in categorias %}
+    <div class="accordion-item mb-3">
+        <h2 class="accordion-header" id="heading-{{ categoria.id }}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ categoria.id }}" aria-expanded="false" aria-controls="collapse-{{ categoria.id }}">
+                {% if categoria.icone %}
+                    <img src="{{ categoria.icone.url }}" alt="Ícone" width="24" height="24" class="me-2">
+                {% else %}
+                    <i class="bi bi-tag-fill me-2"></i>
+                {% endif %}
+                <strong>{{ categoria.nome }}</strong>
+            </button>
+        </h2>
+        <div id="collapse-{{ categoria.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ categoria.id }}" data-bs-parent="#accordionCategorias">
+            <div class="accordion-body">
+                <div class="row">
+                    {% for produto in produtos %}
+                        {% if produto.categoria.id == categoria.id and produto.disponivel %}
+                        <div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center">
+                            <div class="product-card text-center" data-id="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco|floatformat:2 }}">
+                                {% if produto.imagem %}
+                                    <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" class="product-img mb-2">
+                                {% else %}
+                                    <img src="{% static 'imagens/imagem_padrao.jpg' %}" alt="img" class="product-img mb-2">
+                                {% endif %}
+                                <div class="product-name">{{ produto.nome }}</div>
+                                <div class="product-description">{{ produto.descricao }}</div>
+                                <div class="product-price">R$ {{ produto.preco|floatformat:2 }}</div>
+                                <div id="controls-{{ produto.id }}">    </div>
+
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="mt-5 card p-3" id="sacolaResumo">
+    <h4 class="mb-3">🛍️ Sacola</h4>
+    <ul id="listaSacola" class="list-group mb-3"></ul>
+    <h5>Total: R$ <span id="totalSacola">0.00</span></h5>
+    <a href="{% url 'finalizar_pedido' %}" class="btn btn-primary mt-2">Finalizar Pedido</a>
+</div>
+<script src="{% static 'js/sacola.js' %}"></script>
+
+
+{% endblock %}
+
+
+
+
