@@ -1,4 +1,5 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.conf import settings
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 
 
@@ -20,7 +21,7 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-class User(AbstractBaseUser):
+class Cliente(AbstractBaseUser):
     whatsapp = models.CharField(max_length=15, unique=True)
     nome = models.CharField(max_length=100)
     username = None
@@ -47,6 +48,7 @@ class User(AbstractBaseUser):
     def is_staff(self):
         return self.is_admin
 
+
 class Categoria(models.Model):
     nome = models.CharField(max_length=100)
     icone = models.ImageField(upload_to='icones/', blank=True, null=True)
@@ -71,3 +73,39 @@ class Bairro(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class Pedido(models.Model):
+    cliente = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    data = models.DateTimeField(auto_now_add=True)
+    pago = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pendente', 'Pendente'),
+            ('preparando', 'Preparando'),
+            ('pronto', 'Pronto'),
+            ('entregue', 'Entregue'),
+            ('cancelado', 'Cancelado'),
+        ],
+        default='pendente'
+    )
+
+    def total(self):
+        return sum(item.subtotal() for item in self.itens.all())
+
+    def __str__(self):
+        return f"Pedido #{self.id} de {self.cliente.nome} - {self.data.strftime('%d/%m %H:%M')}"
+
+class ItemPedido(models.Model):
+    pedido = models.ForeignKey(Pedido, related_name='itens', on_delete=models.CASCADE)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    quantidade = models.PositiveIntegerField(default=1)
+    preco_unitario = models.DecimalField(max_digits=6, decimal_places=2)
+
+    def subtotal(self):
+        return self.quantidade * self.preco_unitario
+
+    def __str__(self):
+        return f"{self.quantidade}x {self.produto.nome}"
+   

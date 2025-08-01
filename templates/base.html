@@ -49,42 +49,9 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="container py-4">
+    <div class="container">
         {% block content %}{% endblock %}
     </div>
-
-
-    {% if not request.user.is_authenticated %}
-    <div class="modal fade" id="identificacaoModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <form method="post" action="{% url 'login_cliente' %}">
-            {% csrf_token %}
-            <div class="modal-header">
-            <h5 class="modal-title" id="modalLabel">Identifique-se</h5>
-            </div>
-            <div class="modal-body">
-            <div class="mb-3">
-                <label for="nome">Nome:</label>
-                <input type="text" class="form-control" name="nome" required>
-            </div>
-            <div class="mb-3">
-                <label for="whatsapp">WhatsApp (somente números):</label>
-                <input type="text" class="form-control" name="whatsapp" required pattern="\d+">
-            </div>
-            </div>
-            <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Entrar</button>
-            </div>
-        </form>
-        </div>
-    </div>
-    </div>
-    <script>
-    var modal = new bootstrap.Modal(document.getElementById('identificacaoModal'));
-    modal.show();
-    </script>
-    {% endif %}
 
 
     <!-- Bootstrap JS (necessário para accordion funcionar) -->

@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block content %}
-<h2 class="mb-4 text-center">Nosso Cardápio</h2>
+<h2 class="mb-4 text-center"> Olá {{ cliente }} </h2>
 
 <div class="accordion" id="accordionCategorias">
     {% for categoria in categorias %}
@@ -52,6 +52,9 @@
     <h5>Total: R$ <span id="totalSacola">0.00</span></h5>
     <a href="{% url 'finalizar_pedido' %}" class="btn btn-primary mt-2">Finalizar Pedido</a>
 </div>
+<script>
+    const sacolaInicial = JSON.parse('{{ sacola_json|escapejs }}');
+</script>
 <script src="{% static 'js/sacola.js' %}"></script>
 
 
