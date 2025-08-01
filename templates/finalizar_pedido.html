@@ -1,6 +1,58 @@
 {% extends 'base.html' %}
-{% block title %}Finalizar Pedido{% endblock %}
+{% block title %}Finalizar Pedido | HB Esfihas{% endblock %}
+{% load static %}
+
 {% block content %}
-<h2>Resumo do Pedido</h2>
-<p>Em breve aqui terá a confirmação com bairro, endereço e forma de pagamento.</p>
+<div class="row">
+    <div class="col-md-7">
+        <h3>Resumo do Pedido</h3>
+        <div id="resumoSacola" class="card card-body">
+            </div>
+    </div>
+    <div class="col-md-5">
+        <h3>Entrega e Pagamento</h3>
+        <form action="{% url 'criar_pedido' %}" method="post" id="formFinalizar">
+            {% csrf_token %}
+            <input type="hidden" name="sacola_json" id="sacola_json_input">
+
+            <div class="mb-3">
+                <label for="bairro" class="form-label">Selecione o Bairro para Entrega</label>
+                <select name="bairro" id="selectBairro" class="form-select" required>
+                    <option value="">-- Selecione --</option>
+                    {% for bairro in bairros %}
+                        <option value="{{ bairro.id }}" data-frete="{{ bairro.valor_frete }}">
+                            {{ bairro.nome }} - R$ {{ bairro.valor_frete|floatformat:2 }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Forma de Pagamento</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="forma_pagamento" id="pagamentoDinheiro" value="dinheiro" checked>
+                    <label class="form-check-label" for="pagamentoDinheiro">Dinheiro ou Pix</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="forma_pagamento" id="pagamentoCartao" value="cartao_credito" data-taxa="{{ taxa_cartao_percentual }}">
+                    <label class="form-check-label" for="pagamentoCartao">Cartão de Crédito (+{{ taxa_cartao_percentual }}%)</label>
+                </div>
+            </div>
+            
+            <div class="card card-body bg-light">
+                <p class="d-flex justify-content-between">Subtotal: <span>R$ <span id="subtotalValor">0.00</span></span></p>
+                <p class="d-flex justify-content-between">Frete: <span>R$ <span id="freteValor">0.00</span></span></p>
+                <p class="d-flex justify-content-between">Taxa Cartão: <span>R$ <span id="taxaValor">0.00</span></span></p>
+                <hr>
+                <h4 class="d-flex justify-content-between">Total: <strong>R$ <span id="totalValor">0.00</span></strong></h4>
+            </div>
+
+            <div class="d-grid gap-2 mt-3">
+                <button type="submit" class="btn btn-primary btn-lg">Enviar Pedido</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{% static 'js/finalizar.js' %}"></script>
 {% endblock %}

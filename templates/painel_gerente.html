@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Painel de Pedidos | HB Esfihas{% endblock %}
+{% load static %}
+
+{% block content %}
+<h2 class="text-center mb-4">📋 Painel de Pedidos</h2>
+
+{% for pedido in pedidos %}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light d-flex justify-content-between">
+        <strong>#{{ pedido.id }} - {{ pedido.cliente.first_name }}</strong>
+        <span>{{ pedido.criado_em|date:"d/m/Y H:i" }}</span>
+    </div>
+    <div class="card-body">
+        <p><strong>Status:</strong> {{ pedido.get_status_display }}</p>
+        <p><strong>Tipo:</strong> {{ pedido.get_tipo_entrega_display }}</p>
+        {% if pedido.tipo_entrega == 'entrega' %}
+            <p><strong>Bairro:</strong> {{ pedido.bairro.nome }} - R$ {{ pedido.bairro.valor|floatformat:2 }}</p>
+            <p><strong>Endereço:</strong> {{ pedido.endereco }}</p>
+        {% endif %}
+        
+        <ul class="list-group mb-3">
+            {% for item in pedido.itens.all %}
+            <li class="list-group-item d-flex justify-content-between">
+                {{ item.produto.nome }} x{{ item.quantidade }}
+                <span>R$ {{ item.subtotal|floatformat:2 }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <h5 class="mb-3">Total: R$ {{ pedido.total|floatformat:2 }}</h5>
+
+        <div class="btn-group" role="group">
+            <a href="{% url 'atualizar_status_pedido' pedido.id 'aceito' %}" class="btn btn-outline-success btn-sm">✅ Aceitar</a>
+            <a href="{% url 'atualizar_status_pedido' pedido.id 'preparando' %}" class="btn btn-outline-warning btn-sm">👨‍🍳 Preparando</a>
+            <a href="{% url 'atualizar_status_pedido' pedido.id 'pronto' %}" class="btn btn-outline-primary btn-sm">📦 Pronto</a>
+            <a href="{% url 'atualizar_status_pedido' pedido.id 'saiu' %}" class="btn btn-outline-info btn-sm">🛵 Saiu</a>
+            <a href="{% url 'atualizar_status_pedido' pedido.id 'finalizado' %}" class="btn btn-outline-dark btn-sm">🏁 Finalizado</a>
+            <a href="{% url 'atualizar_status_pedido' pedido.id 'cancelado' %}" class="btn btn-outline-danger btn-sm">❌ Cancelar</a>
+        </div>
+    </div>
+</div>
+{% empty %}
+    <p class="text-center">Nenhum pedido encontrado.</p>
+{% endfor %}
+
+{% endblock %}

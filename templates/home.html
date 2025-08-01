@@ -21,8 +21,8 @@
         <div id="collapse-{{ categoria.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ categoria.id }}" data-bs-parent="#accordionCategorias">
             <div class="accordion-body">
                 <div class="row">
-                    {% for produto in produtos %}
-                        {% if produto.categoria.id == categoria.id and produto.disponivel %}
+                    {% for produto in categoria.produto_set.all %}
+                        {% if produto.disponivel %}
                         <div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center">
                             <div class="product-card text-center" data-id="{{ produto.id }}" data-nome="{{ produto.nome }}" data-preco="{{ produto.preco|floatformat:2 }}">
                                 {% if produto.imagem %}
@@ -50,7 +50,7 @@
     <h4 class="mb-3">🛍️ Sacola</h4>
     <ul id="listaSacola" class="list-group mb-3"></ul>
     <h5>Total: R$ <span id="totalSacola">0.00</span></h5>
-    <a href="{% url 'finalizar_pedido' %}" class="btn btn-primary mt-2">Finalizar Pedido</a>
+    <a href="{% url 'resumo_pedido' %}" class="btn btn-primary mt-2">Confirmar Pedido</a>
 </div>
 <script>
     const sacolaInicial = JSON.parse('{{ sacola_json|escapejs }}');

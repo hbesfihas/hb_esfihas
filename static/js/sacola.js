@@ -1,75 +1,81 @@
-// Função para pegar o token CSRF do cookie
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-const csrftoken = getCookie('csrftoken');
-
+// Carrega a sacola do localStorage ao iniciar a página
+let sacola = JSON.parse(localStorage.getItem('sacola') || '{}');
 
 // Função chamada ao clicar em + ou -
-async function updateCart(produtoId, action) {
-    // 1. Atualização visual imediata (lógica local)
-    if (!(produtoId in sacola)) {
-        sacola[produtoId] = { quantidade: 0 };
+function updateCart(produtoId, action) {
+    // Busca o card do produto na página para pegar os dados
+    const productCard = document.querySelector(`.product-card[data-id='${produtoId}']`);
+    if (!productCard) {
+        console.error('Card do produto não encontrado! Verifique o HTML.');
+        return;
     }
-    const nome = document.querySelector(`.product-card[data-id='${produtoId}']`).getAttribute('data-nome');
-    const preco = document.querySelector(`.product-card[data-id='${produtoId}']`).getAttribute('data-preco');
+    const nome = productCard.getAttribute('data-nome');
+    const preco = productCard.getAttribute('data-preco');
+
+    // Se o produto não está na sacola, inicializa ele com todas as informações
+    if (!(produtoId in sacola)) {
+        // PONTO CRÍTICO DA CORREÇÃO ESTÁ AQUI:
+        sacola[produtoId] = { 
+            quantidade: 0,
+            nome: nome,
+            preco: preco
+        };
+    }
 
     if (action === 'add') {
         sacola[produtoId].quantidade += 1;
-        sacola[produtoId].nome = nome; // Garante que temos nome/preço na sacola
-        sacola[produtoId].preco = preco;
     } else if (action === 'remove') {
         sacola[produtoId].quantidade -= 1;
     }
     
-    if (sacola[produtoId].quantidade <= 0) {
+    // Se a quantidade for zero ou menos, remove o item da sacola
+    if (sacola[produtoId]?.quantidade <= 0) {
         delete sacola[produtoId];
     }
-    
-    atualizarVisualSacola(); // Atualiza a tela localmente na hora
 
-    // 2. Enviar a atualização para o backend (Django)
-    try {
-        const response = await fetch(`/add_carrinho/${produtoId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken, // Token de segurança
-            },
-            body: JSON.stringify({ action: action })
-        });
+    atualizarSacola();
+}
 
-        if (!response.ok) {
-            console.error('Falha ao atualizar a sacola no servidor.');
-            // Aqui você poderia reverter a mudança visual ou mostrar um erro
+
+// Atualiza a interface da página principal (home)
+function atualizarSacola() {
+    const sacolaResumo = document.getElementById('sacolaResumo');
+    if (sacolaResumo) {
+        let lista = document.getElementById('listaSacola');
+        if (lista) lista.innerHTML = '';
+        
+        let total = 0;
+        for(const id in sacola) {
+            const item = sacola[id];
+            if (item.quantidade > 0) {
+                total += item.quantidade * parseFloat(item.preco);
+            }
         }
         
-        // Opcional: pode usar a resposta do servidor se ele retornar algo útil
-        const data = await response.json();
-        console.log('Sacola do servidor atualizada:', data);
-
-    } catch (error) {
-        console.error('Erro de rede:', error);
+        const totalEl = document.getElementById('totalSacola');
+        if (totalEl) totalEl.innerText = total.toFixed(2);
     }
+    
+    for (let card of document.querySelectorAll('.product-card')) {
+        const id = card.getAttribute('data-id');
+        const qtd = sacola[id]?.quantidade || 0;
+        const controlsContainer = card.querySelector(`#controls-${id}`);
+        if(controlsContainer){
+            const controls = `
+                ${qtd > 0
+                    ? `<button class="btn btn-outline-danger btn-sm me-2" onclick="updateCart('${id}', 'remove')">−</button>
+                       <span class="mx-2">${qtd}</span>
+                       <button class="btn btn-outline-success btn-sm ms-2" onclick="updateCart('${id}', 'add')">+</button>`
+                    : `<button class="btn btn-outline-primary btn-sm" onclick="updateCart('${id}', 'add')">Adicionar</button>`
+                }
+            `;
+            controlsContainer.innerHTML = controls;
+        }
+    }
+
+    // Salva a sacola completa no localStorage
+    localStorage.setItem('sacola', JSON.stringify(sacola));
 }
 
-// Renomeie 'atualizarSacola' para 'atualizarVisualSacola' para evitar confusão
-function atualizarVisualSacola() {
-    // A lógica desta função continua a mesma, mas sem salvar no localStorage.
-    // Ela apenas lê o objeto 'sacola' e atualiza a tela.
-    // ... (todo o seu código de manipulação do DOM)
-}
-
-// ...
-document.addEventListener('DOMContentLoaded', atualizarVisualSacola);
+// Atualiza a sacola assim que a página é carregada
+document.addEventListener('DOMContentLoaded', atualizarSacola);

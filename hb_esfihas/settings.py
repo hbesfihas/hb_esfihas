@@ -71,7 +71,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-            ],
+          ],
         },
     },
 ]
@@ -134,3 +134,8 @@ MEDIA_ROOT = BASE_DIR / "media"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CHAVE_PIX = "+5563981216616"
+TAXA_CARTAO_PERCENTUAL = 5
+NOME_LOJA = "HB Esfihas"
+CIDADE_LOJA = "Pedro Afonso"
