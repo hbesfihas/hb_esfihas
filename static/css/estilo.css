@@ -3,3 +3,161 @@
   height: 200px;
   background: linear-gradient(to bottom, blue, red);
 }
+
+.fundo{
+    background-color: #c7c7c7;
+    text-decoration: solid;
+    color: black;
+    padding-inline: 10px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    font-weight: bold;
+}
+/* Arquivo: static/css/style.css */
+
+/* Estilo geral do corpo da página para um fundo suave */
+body {
+    background-color: #f8f9fa; /* Um cinza muito claro, padrão do Bootstrap */
+}
+
+/* --- ESTILOS DO CARD DE PRODUTO --- */
+
+.product-card {
+    border: none; /* Removemos a borda padrão para focar na sombra */
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+    background-color: #ffffff;
+    
+    /* A NOVA SOMBRA: suave, esfumaçada e com ângulo natural (de cima para baixo, direita) */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+    
+    /* Transição suave para efeitos de hover */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.product-card:hover {
+    transform: translateY(-5px); /* Efeito de "levantar" o card */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1), 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* --- ESTILOS DA IMAGEM DO PRODUTO (REDONDA) --- */
+
+.product-img {
+    width: 120px;   /* Largura e altura fixas para um círculo perfeito */
+    height: 120px;
+    
+    /* A MÁGICA PARA A IMAGEM REDONDA E ADAPTADA */
+    border-radius: 50%; /* Transforma o elemento em um círculo */
+    object-fit: cover;  /* Garante que a imagem preencha o círculo sem distorcer, cortando o excesso */
+
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    transform: translateY(-5px); /* Efeito de "levantar" o card */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1), 0 12px 30px rgba(0, 0, 0, 0.08);
+
+}
+
+.product-name {
+    font-weight: 600; /* Um pouco mais forte que 'bold' */
+    margin-top: 12px;
+    font-size: 1rem;
+}
+
+.product-description {
+    font-size: 0.85rem;
+    color: #6c757d; /* Cinza padrão do Bootstrap */
+    min-height: 40px; /* Garante uma altura mínima para alinhar os cards */
+}
+
+.product-price {
+    font-size: 1.1rem;
+    color: #198754; /* Verde sucesso do Bootstrap */
+    font-weight: 700;
+    margin-top: 8px;
+}
+/* Arquivo: static/css/style.css */
+
+/* --- ESTILOS DO ACCORDION PERSONALIZADO --- */
+
+.accordion-button-custom {
+    color: white; /* Cor do texto e do ícone principal */
+}
+
+/* Quando o accordion NÃO está colapsado (aberto), o botão fica com a cor do texto branca */
+.accordion-button-custom:not(.collapsed) {
+    color: white;
+    box-shadow: none; /* Remove a sombra padrão do Bootstrap quando aberto */
+}
+
+/* O ícone de "seta" do accordion precisa ser branco também */
+.accordion-button-custom::after {
+    /* O Bootstrap usa uma imagem SVG para o ícone, então usamos um filtro para pintá-la */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+/* Quando o botão está focado (clicado), removemos a borda colorida padrão */
+.accordion-button-custom:focus {
+    box-shadow: none;
+    border-color: rgba(0,0,0,.125);
+}
+
+/* Arquivo: static/css/style.css */
+
+/* --- ESTILO DO BOTÃO DESLIZANTE (TOGGLE SWITCH) --- */
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+/* Esconde o checkbox padrão do HTML */
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* O fundo do botão (a "pista" onde o círculo desliza) */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #dc3545; /* Cor de "desligado" (vermelho) */
+    border-radius: 34px;
+    transition: .4s; /* Animação suave */
+}
+
+/* O círculo que desliza */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+/* Quando o checkbox está MARCADO (ligado) */
+input:checked + .slider {
+    background-color: #198754; /* Cor de "ligado" (verde) */
+}
+
+input:checked + .slider:before {
+    /* Move o círculo para a direita */
+    transform: translateX(26px);
+}
+
+.product-card.esgotado {
+    opacity: 0.5;
+    pointer-events: none; /* Impede cliques no card */
+}

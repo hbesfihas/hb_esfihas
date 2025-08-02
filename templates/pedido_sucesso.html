@@ -1,43 +1,60 @@
 {% extends 'base.html' %}
+
 {% block content %}
 <div class="container text-center mt-5">
   <h2 class="text-success">🎉 Pedido #{{ pedido.id }} realizado com sucesso!</h2>
-  <p class="mt-3">Acompanhe o status do seu pedido na área "Meus Pedidos".</p>
-  
+  {% if pontos_ganhos > 0 %}
+  <div class="alert alert-info mt-3 mx-auto" style="max-width: 500px;">
+    <i class="bi bi-star-fill"></i> Você ganhou <strong>{{ pontos_ganhos }} ponto(s)</strong> com este pedido!
+  </div>
+  {% endif %}
+
+  {% if pix_payload %}
   <div class="card mt-4 mx-auto" style="max-width: 500px;">
     <div class="card-header fw-bold">
       Pagamento via Pix
     </div>
     <div class="card-body">
-      <p>Para finalizar, pague o valor de <strong>R$ {{ pedido.total|floatformat:2 }}</strong> usando o código abaixo:</p>
-      
+      <p>Para finalizar, pague o valor de <strong>R$ {{ pedido.total|floatformat:2 }}</strong> usando o código abaixo:
+      </p>
+
       <div class="input-group">
         <input type="text" id="pixCopiaECola" class="form-control" value="{{ pix_payload }}" readonly>
         <button class="btn btn-outline-primary" type="button" id="btnCopiar">Copiar Código</button>
       </div>
       <small id="copiadoMsg" class="text-success mt-2" style="display: none;">Copiado!</small>
-      <p class="mt-3 text-muted"><small>Você também pode escanear o QR Code em nosso balcão.</small></p>
     </div>
   </div>
-
+  {% endif %}
+  <p class="mt-3">Acompanhe o status do seu pedido na área <a href="{% url 'meus_pedidos' %}" class="btn btn-success">Meus Pedidos</a></p>
 
   <a href="{% url 'home' %}" class="btn btn-primary mt-4">Voltar ao cardápio</a>
 </div>
+{% endblock %}
 
-{% if pix_payload %}
+{% block extra_js %}
 <script>
-  // Script simples para o botão de copiar
-  document.getElementById('btnCopiar').addEventListener('click', function() {
-    const input = document.getElementById('pixCopiaECola');
-    input.select();
-    input.setSelectionRange(0, 99999); // Para mobile
-    document.execCommand('copy');
+  // Este script roda assim que a página de sucesso é carregada
+  document.addEventListener('DOMContentLoaded', () => {
+    // Verifica se o botão de copiar PIX existe e adiciona a funcionalidade a ele
+    const btnCopiar = document.getElementById('btnCopiar');
+    if (btnCopiar) {
+      btnCopiar.addEventListener('click', function () {
+        const input = document.getElementById('pixCopiaECola');
+        input.select();
+        input.setSelectionRange(0, 99999); // Para mobile
+        document.execCommand('copy');
 
-    const msg = document.getElementById('copiadoMsg');
-    msg.style.display = 'block';
-    setTimeout(() => { msg.style.display = 'none'; }, 2000);
+        const msg = document.getElementById('copiadoMsg');
+        msg.style.display = 'block';
+        setTimeout(() => { msg.style.display = 'none'; }, 2000);
+      });
+    }
+
+    console.log("Pedido finalizado com sucesso. Limpando a sacola do localStorage...");
+    // Remove a chave 'sacola' do armazenamento do navegador
+    localStorage.removeItem('sacola');
+    console.log("Sacola limpa!");
   });
 </script>
-{% endif %}
-
 {% endblock %}

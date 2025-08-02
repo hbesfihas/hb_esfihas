@@ -10,16 +10,16 @@
                 <span class="text-primary">🛍️ Sacola de Compras</span>
                 <span class="badge bg-primary rounded-pill" id="contadorItens">0</span>
             </h4>
-            
+
             <ul class="list-group mb-3" id="listaResumo">
-                </ul>
+            </ul>
 
             <ul class="list-group">
                 <li class="list-group-item d-flex justify-content-between">
                     <span>Subtotal</span>
                     <strong id="subtotalValor">R$ 0.00</strong>
                 </li>
-                <li class="list-group-item d-flex justify-content-between">
+                <li id="linhaFrete" class="list-group-item d-flex justify-content-between escondido">
                     <span>Taxa de Entrega</span>
                     <strong id="freteValor">R$ 0.00</strong>
                 </li>
@@ -39,7 +39,7 @@
             <form id="formPedido" method="POST" action="{% url 'criar_pedido' %}">
                 {% csrf_token %}
                 <input type="hidden" name="sacola" id="inputSacola">
-                
+
                 <div class="row g-3">
                     <div class="col-12">
                         <label for="tipoEntrega" class="form-label fw-bold">Como você quer receber?</label>
@@ -56,15 +56,16 @@
                             <select name="bairro" id="selectBairro" class="form-select">
                                 <option value="" data-frete="0">Selecione o bairro</option>
                                 {% for bairro in bairros %}
-                                    <option value="{{ bairro.id }}" data-frete="{{ bairro.valor_frete }}">
-                                        {{ bairro.nome }}
-                                    </option>
+                                <option value="{{ bairro.id }}" data-frete="{{ bairro.valor_frete }}">
+                                    {{ bairro.nome }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-12">
                             <label for="endereco" class="form-label">Endereço Completo</label>
-                            <input type="text" name="endereco" class="form-control" placeholder="Rua, Número, Complemento">
+                            <input type="text" name="endereco" class="form-control"
+                                placeholder="Rua, Número, Complemento">
                         </div>
                     </div>
                 </div>
@@ -74,15 +75,18 @@
                 <h5 class="mb-3">Forma de Pagamento</h5>
                 <div class="my-3">
                     <div class="form-check">
-                        <input id="dinheiro_pix" name="forma_pagamento" type="radio" value="dinheiro_pix" class="form-check-input" checked required>
+                        <input id="dinheiro_pix" name="forma_pagamento" type="radio" value="dinheiro_pix"
+                            class="form-check-input" checked required>
                         <label class="form-check-label" for="dinheiro_pix">Dinheiro ou Pix</label>
                     </div>
                     <div class="form-check">
-                        <input id="debito" name="forma_pagamento" type="radio" value="cartao_debito" class="form-check-input" required>
+                        <input id="debito" name="forma_pagamento" type="radio" value="cartao_debito"
+                            class="form-check-input" required>
                         <label class="form-check-label" for="debito">Cartão de Débito (sem taxa)</label>
                     </div>
                     <div class="form-check">
-                        <input id="credito" name="forma_pagamento" type="radio" value="cartao_credito" class="form-check-input" required data-taxa="{{ taxa_cartao_percentual }}">
+                        <input id="credito" name="forma_pagamento" type="radio" value="cartao_credito"
+                            class="form-check-input" required data-taxa="{{ taxa_cartao_percentual }}">
                         <label class="form-check-label" for="credito">Cartão de Crédito (+5%)</label>
                     </div>
                 </div>
@@ -94,5 +98,11 @@
     </div>
 </div>
 
-<script src="{% static 'js/resumo.js' %}"></script>
+<style>
+    .escondido {
+        display: none !important;
+    }
+</style>
+
+<script src="{% static 'js/gerenciador-sacola.js' %}"></script>
 {% endblock %}

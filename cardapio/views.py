@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.shortcuts import render, redirect
-from .models import Categoria, Produto, Cliente,Pedido, ItemPedido, Bairro
-from django.contrib.auth import login
+from .models import Categoria, Produto, Cliente,Pedido, ItemPedido, Bairro, ConfiguracaoLoja
+from django.contrib.auth import login, logout
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 import json
@@ -10,8 +10,16 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.conf import settings
 from django.http import JsonResponse, HttpResponseBadRequest
 from pixqrcodegen import Payload
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.template.loader import render_to_string
 import io 
 import sys
+from django.utils import timezone
+from django.db.models import Sum, Q
+from django.db.models.functions import Trunc
+from datetime import timedelta
+from django.db import transaction 
 
 def login_cliente(request):
     if request.method == 'POST':
@@ -24,13 +32,18 @@ def login_cliente(request):
             login(request, cliente, backend='django.contrib.auth.backends.ModelBackend')
     return redirect('home')  # redireciona de volta para a home
 
+def logout_cliente(request):
+    logout(request)
+    return redirect('login_cliente')  # redireciona para a página de login
 
 def home(request):
-    cliente = request.user
-    categorias = Categoria.objects.prefetch_related('produto_set').order_by('ordem')
-    produtos = Produto.objects.all()
-    return render(request, 'home.html', {'categorias': categorias, 'produtos': produtos, 'cliente': cliente,})
-
+    if request.user.is_authenticated:
+        cliente = request.user
+        categorias = Categoria.objects.prefetch_related('produto_set').order_by('ordem')
+        produtos = Produto.objects.all()
+        return render(request, 'home.html', {'categorias': categorias, 'produtos': produtos, 'cliente': cliente,})
+    else:
+        return render(request, 'login_cliente.html')
 
 @login_required
 def resumo_pedido(request):
@@ -38,7 +51,7 @@ def resumo_pedido(request):
     taxa_cartao = settings.TAXA_CARTAO_PERCENTUAL  # Percentual fixo de taxa para cartão de crédito
     context = {
         'bairros': bairros,
-        'taxa_cartao': taxa_cartao,
+        'taxa_cartao_percentual': taxa_cartao,
     }
     return render(request, 'resumo.html', context)
 
@@ -56,7 +69,8 @@ def pedido_sucesso(request, pedido_id):
         valor=f"{pedido.total:.2f}",
         txtId=f"PEDIDO{pedido.id:04}"
     )
-    
+    pontos_ganhos = int(pedido.total // 10)
+
     # --- Bloco para capturar a saída do console ---
     
     # Guarda o "console" original em uma variável temporária
@@ -76,9 +90,11 @@ def pedido_sucesso(request, pedido_id):
     
     # --- Fim do bloco de captura ---
    
+   
     context = {
         'pedido': pedido,
-        'pix_payload': pix_payload  # Esta variável agora sempre terá um valor
+        'pix_payload': pix_payload,  # Esta variável agora sempre terá um valor
+        'pontos_ganhos': pontos_ganhos,
     }
     return render(request, 'pedido_sucesso.html', context)
 
@@ -99,70 +115,99 @@ def criar_pedido(request):
         return HttpResponseBadRequest("Método não permitido")
 
     try:
-        # 1. Obter dados do formulário
-        dados_sacola = json.loads(request.POST.get('sacola', '{}'))
-        tipo_entrega = request.POST.get('tipo_entrega')
-        bairro_id = request.POST.get('bairro')
-        endereco = request.POST.get('endereco', '').strip()
-        forma_pagamento = request.POST.get('forma_pagamento') # Adicionado para taxa
+        # transaction.atomic garante que ou tudo funciona, ou nada é salvo.
+        with transaction.atomic():
+            # 1. PEGAR TODOS OS DADOS DA REQUISIÇÃO
+            dados_sacola = json.loads(request.POST.get('sacola', '{}'))
+            tipo_entrega = request.POST.get('tipo_entrega')
+            bairro_id = request.POST.get('bairro')
+            endereco = request.POST.get('endereco', '').strip()
+            forma_pagamento = request.POST.get('forma_pagamento')
 
-        if not dados_sacola or not tipo_entrega:
-            return HttpResponseBadRequest("Dados incompletos.")
+            if not dados_sacola or not tipo_entrega:
+                return HttpResponseBadRequest("Dados do pedido estão incompletos.")
 
-        # 2. Buscar todos os produtos do DB de uma vez (Mais eficiente)
-        ids_produtos = list(dados_sacola.keys())
-        produtos_no_db = Produto.objects.in_bulk([int(pid) for pid in ids_produtos])
-
-        # 3. Recalcular totais no SERVIDOR (Passo de segurança essencial)
-        subtotal_pedido = Decimal("0.00")
-        for produto_id, item_sacola in dados_sacola.items():
-            produto_db = produtos_no_db.get(int(produto_id))
-            if produto_db:
-                # Usa o preço do BANCO DE DADOS, não o do cliente!
-                subtotal_pedido += produto_db.preco * int(item_sacola['quantidade'])
-            else:
-                return HttpResponseBadRequest(f"Produto com ID {produto_id} não encontrado.")
-
-        # 4. Calcular frete e taxas
-        valor_frete = Decimal("0.00")
-        bairro = None
-        if tipo_entrega == 'entrega' and bairro_id:
-            bairro = get_object_or_404(Bairro, id=bairro_id)
-            valor_frete = bairro.valor_frete # CORRIGIDO: usando 'valor_frete'
-
-        taxa_cartao = Decimal("0.00")
-        if forma_pagamento == 'cartao_credito':
-            taxa_percentual = Decimal(str(settings.TAXA_CARTAO_PERCENTUAL))
-            taxa_cartao = (subtotal_pedido + valor_frete) * (taxa_percentual / 100)
-
-        total_final = subtotal_pedido + valor_frete + taxa_cartao
-        
-        # 5. Criar o Pedido no banco de dados
-        pedido = Pedido.objects.create(
-            cliente=request.user,
-            tipo_entrega=tipo_entrega,
-            total=total_final.quantize(Decimal("0.01")),
-            bairro=bairro, # Para isso funcionar, veja o Passo 3
-            endereco_entrega=endereco if tipo_entrega == 'entrega' else '',
-            forma_pagamento=forma_pagamento,
-        )
-
-        # 6. Criar os Itens do Pedido
-        for produto_id, item_sacola in dados_sacola.items():
-            produto_db = produtos_no_db.get(int(produto_id))
-            quantidade = int(item_sacola['quantidade'])
+            # 2. BUSCAR PRODUTOS E VALIDAR ESTOQUE EM UMA ÚNICA PASSAGEM
+            ids_produtos = [int(pid) for pid in dados_sacola.keys()]
+            produtos_no_db = {p.id: p for p in Produto.objects.filter(id__in=ids_produtos)}
             
-            ItemPedido.objects.create(
-                pedido=pedido,
-                produto=produto_db,
-                quantidade=quantidade,
-                subtotal=(produto_db.preco * quantidade).quantize(Decimal("0.01"))
+            subtotal_pedido = Decimal("0.00")
+            for produto_id_str, item_sacola in dados_sacola.items():
+                produto_id = int(produto_id_str)
+                produto_db = produtos_no_db.get(produto_id)
+                quantidade_pedida = item_sacola['quantidade']
+
+                # Validação de segurança e estoque
+                if not produto_db or produto_db.estoque < quantidade_pedida:
+                    nome_produto = produto_db.nome if produto_db else f"ID {produto_id}"
+                    return HttpResponseBadRequest(f"Desculpe, o produto '{nome_produto}' não tem estoque suficiente.")
+                
+                # Recalcula o subtotal com o preço do banco de dados (segurança)
+                subtotal_pedido += produto_db.preco * quantidade_pedida
+
+            # 3. CALCULAR FRETE E TAXAS
+            valor_frete = Decimal("0.00")
+            bairro = None
+            if tipo_entrega == 'entrega' and bairro_id:
+                bairro = get_object_or_404(Bairro, id=bairro_id)
+                valor_frete = bairro.valor_frete
+
+            taxa_cartao = Decimal("0.00")
+            if forma_pagamento == 'cartao_credito':
+                taxa_percentual = Decimal(str(settings.TAXA_CARTAO_PERCENTUAL))
+                taxa_cartao = (subtotal_pedido + valor_frete) * (taxa_percentual / 100)
+
+            total_final = subtotal_pedido + valor_frete + taxa_cartao
+
+            # 4. CRIAR O PEDIDO
+            pedido = Pedido.objects.create(
+                cliente=request.user,
+                tipo_entrega=tipo_entrega,
+                total=total_final.quantize(Decimal("0.01")),
+                bairro=bairro,
+                endereco_entrega=endereco if tipo_entrega == 'entrega' else '',
+                forma_pagamento=forma_pagamento,
             )
 
-        # 7. Redirecionar para a página de sucesso
+            # 5. CRIAR ITENS DO PEDIDO E DAR BAIXA NO ESTOQUE
+            for produto_id_str, item_sacola in dados_sacola.items():
+                produto_db = produtos_no_db[int(produto_id_str)]
+                quantidade = int(item_sacola['quantidade'])
+                
+                ItemPedido.objects.create(
+                    pedido=pedido,
+                    produto=produto_db,
+                    quantidade=quantidade,
+                    subtotal=(produto_db.preco * quantidade).quantize(Decimal("0.01"))
+                )
+                
+                # A LÓGICA CORRIGIDA E ADICIONADA:
+                produto_db.estoque -= quantidade
+                produto_db.save(update_fields=['estoque'])
+
+            # 6. ATRIBUIR PONTOS
+            cliente = request.user
+            pontos_ganhos = int(total_final // 10)
+            if pontos_ganhos > 0:
+                cliente.pontos += pontos_ganhos
+                cliente.save(update_fields=['pontos'])
+
+            # 7. NOTIFICAR GERENTES VIA WEBSOCKET
+            html_pedido = render_to_string(
+                'partials/card_pedido_gerente.html',
+                {'pedido': pedido, 'request': request}
+            )
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                'gerentes',
+                {'type': 'novo_pedido', 'pedido_html': html_pedido}
+            )
+
+        # Se a transação foi um sucesso, redireciona
         return redirect('pedido_sucesso', pedido_id=pedido.id)
 
     except Exception as e:
+        # Se qualquer erro ocorrer dentro do 'with', a transação é desfeita
         return HttpResponseBadRequest(f"Erro ao criar pedido: {str(e)}")
 
 @login_required
@@ -173,12 +218,207 @@ def meus_pedidos(request):
 
 @staff_member_required
 def painel_gerente(request):
+    # --- LÓGICA DE FILTRAGEM ---
+    
+    # Pega os valores dos filtros da URL (via GET)
+    data_filtro = request.GET.get('data', None)
+    cliente_filtro_id = request.GET.get('cliente', None)
+    pago_filtro = request.GET.get('pago', None)
+    # Base da nossa busca: todos os pedidos, ordenados do mais novo para o mais antigo
     pedidos = Pedido.objects.all().order_by('-criado_em')
-    return render(request, 'painel_gerente.html', {'pedidos': pedidos})
+
+    # Se um cliente foi selecionado no filtro, aplica o filtro
+    if cliente_filtro_id:
+        pedidos = pedidos.filter(cliente_id=cliente_filtro_id)
+
+    # Se uma data foi selecionada, aplica o filtro.
+    # Se nenhuma data foi selecionada, filtra pelos pedidos de HOJE por padrão.
+    if data_filtro:
+        pedidos = pedidos.filter(criado_em__date=data_filtro)
+    else:
+        # Se o campo de data estiver vazio, mostre apenas os de hoje
+        pedidos = pedidos.filter(criado_em__date=timezone.localdate())
+
+    if pago_filtro == 'sim':
+        pedidos = pedidos.filter(pago=True)
+    elif pago_filtro == 'nao':
+        pedidos = pedidos.filter(pago=False)
+
+    # --- FIM DA LÓGICA DE FILTRAGEM ---
+
+    # Buscamos todos os clientes para popular o menu dropdown do filtro
+    todos_clientes = Cliente.objects.filter(is_admin=False).order_by('nome')
+    
+    # Prepara os dados para enviar ao template
+    context = {
+        'pedidos': pedidos,
+        'todos_clientes': todos_clientes,
+        # Envia os valores selecionados de volta para o template para manter os campos preenchidos
+        'data_selecionada': data_filtro if data_filtro else timezone.localdate().strftime('%Y-%m-%d'),
+        'cliente_selecionado_id': int(cliente_filtro_id) if cliente_filtro_id else None,
+        'pago_selecionado': pago_filtro if pago_filtro in ['sim', 'nao'] else None,
+    }
+    return render(request, 'painel_gerente.html', context)
 
 @staff_member_required
 def atualizar_status_pedido(request, pedido_id, novo_status):
-    pedido = get_object_or_404(Pedido, pk=pedido_id)
-    pedido.status = novo_status
-    pedido.save()
-    return redirect('painel_gerente')
+    if request.method == 'POST':
+        pedido = get_object_or_404(Pedido, pk=pedido_id)
+        pedido.status = novo_status
+        pedido.save()
+
+        STATUS_CORES = {
+            'pendente': 'bg-light',
+            'preparando': 'bg-warning text-dark bg-opacity-50',
+            'pronto': 'bg-info text-dark bg-opacity-50',
+            'entregue': 'bg-success text-white bg-opacity-75',
+            'cancelado': 'bg-secondary text-white bg-opacity-75'
+        }
+        
+        channel_layer = get_channel_layer()
+        
+        # Prepara a mensagem uma única vez
+        message_data = {
+            'type': 'status_update',
+            'message': {
+                'pedido_id': pedido_id,
+                'novo_status': pedido.get_status_display(),
+                'nova_cor_classe': STATUS_CORES.get(novo_status, 'bg-light')
+            }
+        }
+
+        # 1. Envia para o grupo dos gerentes
+        async_to_sync(channel_layer.group_send)('gerentes', message_data)
+        
+
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'erro'}, status=405)
+
+
+# Em cardapio/views.py
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+
+@xframe_options_sameorigin
+@staff_member_required
+def imprimir_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    context = {
+        'pedido': pedido,
+    }
+    return render(request, 'imprimir_pedido.html', context)
+
+@staff_member_required
+def toggle_loja_status_api(request):
+    if request.method == 'POST':
+        config = ConfiguracaoLoja.objects.get(pk=1)
+        config.loja_aberta = not config.loja_aberta
+        config.save()
+
+        # --- AVISO VIA WEBSOCKET PARA TODOS OS GERENTES ---
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'gerentes',
+            {
+                'type': 'store_status_update', # Novo tipo de mensagem
+                'message': {
+                    'loja_aberta': config.loja_aberta
+                }
+            }
+        )
+        # --- FIM DO AVISO ---
+
+        return JsonResponse({'status': 'ok', 'loja_aberta': config.loja_aberta})
+    return JsonResponse({'status': 'erro'}, status=405)
+
+@staff_member_required
+def toggle_pago_status_api(request, pedido_id):
+    if request.method == 'POST':
+        pedido = get_object_or_404(Pedido, id=pedido_id)
+        # Inverte o status atual (se era False, vira True, e vice-versa)
+        pedido.pago = not pedido.pago
+        pedido.save()
+        return JsonResponse({'status': 'ok', 'pago': pedido.pago})
+    return JsonResponse({'status': 'erro'}, status=405)
+
+@staff_member_required
+def dashboard_vendas(request):
+    # --- 1. CÁLCULO DE CLIENTES DEVEDORES (continua o mesmo) ---
+    clientes_devedores = Cliente.objects.filter(
+        pedido__pago=False, is_admin=False
+    ).annotate(
+        total_nao_pago=Sum('pedido__total', filter=Q(pedido__pago=False))
+    ).order_by('-total_nao_pago')
+
+    # --- 2. CÁLCULO PARA O GRÁFICO (COM NOVOS PERÍODOS) ---
+    periodo = request.GET.get('periodo', 'semana') # Padrão: semana
+    hoje = timezone.localdate()
+    
+    # Base da queryset: apenas pedidos pagos
+    queryset = Pedido.objects.filter(pago=True)
+    
+    # Mapeamento de meses para abreviações em português
+    meses_pt = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'}
+
+    if periodo == 'hoje':
+        queryset = queryset.filter(criado_em__date=hoje)
+        chart_data = queryset.annotate(agrupador=Trunc('criado_em', 'hour')).values('agrupador').annotate(faturamento=Sum('total')).order_by('agrupador')
+        labels = [item['agrupador'].strftime('%H:00') for item in chart_data]
+    elif periodo == 'semana':
+        data_inicio_semana = hoje - timedelta(days=hoje.weekday())
+        queryset = queryset.filter(criado_em__date__gte=data_inicio_semana)
+        chart_data = queryset.annotate(agrupador=Trunc('criado_em', 'day')).values('agrupador').annotate(faturamento=Sum('total')).order_by('agrupador')
+        labels = [item['agrupador'].strftime('%d/%m') for item in chart_data]
+    elif periodo == 'mes':
+        queryset = queryset.filter(criado_em__year=hoje.year, criado_em__month=hoje.month)
+        chart_data = queryset.annotate(agrupador=Trunc('criado_em', 'day')).values('agrupador').annotate(faturamento=Sum('total')).order_by('agrupador')
+        labels = [item['agrupador'].strftime('%d/%m') for item in chart_data]
+    elif periodo == 'trimestre':
+        queryset = queryset.filter(criado_em__year=hoje.year)
+        chart_data = queryset.annotate(agrupador=Trunc('criado_em', 'quarter')).values('agrupador').annotate(faturamento=Sum('total')).order_by('agrupador')
+        labels = [f"{ (item['agrupador'].month-1)//3 + 1 }º Trim" for item in chart_data]
+    elif periodo == 'ano':
+        queryset = queryset.filter(criado_em__year=hoje.year)
+        chart_data = queryset.annotate(agrupador=Trunc('criado_em', 'month')).values('agrupador').annotate(faturamento=Sum('total')).order_by('agrupador')
+        labels = [meses_pt.get(item['agrupador'].month, '') for item in chart_data]
+    else: # Fallback para semana
+        data_inicio_semana = hoje - timedelta(days=hoje.weekday())
+        queryset = queryset.filter(criado_em__date__gte=data_inicio_semana)
+        chart_data = queryset.annotate(agrupador=Trunc('criado_em', 'day')).values('agrupador').annotate(faturamento=Sum('total')).order_by('agrupador')
+        labels = [item['agrupador'].strftime('%d/%m') for item in chart_data]
+
+    data = [float(item['faturamento']) for item in chart_data]
+
+    context = {
+        'clientes_devedores': clientes_devedores,
+        'chart_labels': json.dumps(labels),
+        'chart_data': json.dumps(data),
+        'periodo_selecionado': periodo,
+    }
+    return render(request, 'dashboard.html', context)
+
+
+@login_required
+@login_required
+def validar_estoque_api(request):
+    if request.method == 'POST':
+        try:
+            dados_sacola = json.loads(request.body)
+            if not dados_sacola:
+                return JsonResponse({'status': 'erro', 'message': 'Sua sacola está vazia.'}, status=400)
+
+            for produto_id_str, item_sacola in dados_sacola.items():
+                produto = Produto.objects.get(id=int(produto_id_str))
+                quantidade_pedida = item_sacola.get('quantidade', 0)
+
+                if produto.estoque < quantidade_pedida:
+                    # Se um item não tiver estoque, retorna um erro imediatamente
+                    mensagem = f"Desculpe, o produto '{produto.nome}' não tem estoque suficiente. Temos apenas {produto.estoque} unidade(s)."
+                    return JsonResponse({'status': 'erro', 'message': mensagem}, status=400)
+            
+            # Se o loop terminar sem erros, o estoque está OK
+            return JsonResponse({'status': 'ok'})
+
+        except Produto.DoesNotExist:
+            return JsonResponse({'status': 'erro', 'message': 'Um produto na sua sacola não foi encontrado.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'erro', 'message': str(e)}, status=500)

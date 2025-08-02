@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard de Vendas{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">📈 Dashboard Financeiro</h2>
+
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                Faturamento (Pedidos Pagos)
+            </div>
+            <div class="card-body">
+                <div class="btn-group mb-3" role="group">
+                    <a href="?periodo=hoje"
+                        class="btn btn-sm {% if periodo_selecionado == 'hoje' %}btn-primary{% else %}btn-outline-primary{% endif %}">Hoje</a>
+                    <a href="?periodo=semana"
+                        class="btn btn-sm {% if periodo_selecionado == 'semana' %}btn-primary{% else %}btn-outline-primary{% endif %}">Esta
+                        Semana</a>
+                    <a href="?periodo=mes"
+                        class="btn btn-sm {% if periodo_selecionado == 'mes' %}btn-primary{% else %}btn-outline-primary{% endif %}">Este
+                        Mês</a>
+                    <a href="?periodo=trimestre"
+                        class="btn btn-sm {% if periodo_selecionado == 'trimestre' %}btn-primary{% else %}btn-outline-primary{% endif %}">Por
+                        Trimestre</a>
+                    <a href="?periodo=ano"
+                        class="btn btn-sm {% if periodo_selecionado == 'ano' %}btn-primary{% else %}btn-outline-primary{% endif %}">Este
+                        Ano</a>
+                </div>
+                <canvas id="graficoFaturamento"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                Clientes com Pedidos Não Pagos
+            </div>
+            <div class="card-body">
+                {% if clientes_devedores %}
+                <ul class="list-group list-group-flush">
+                    {% for cliente in clientes_devedores %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ cliente.nome }}
+                        <span class="badge bg-danger rounded-pill">R$ {{ cliente.total_nao_pago|floatformat:2 }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-success">Nenhum cliente com pagamentos pendentes!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('graficoFaturamento').getContext('2d');
+
+        // Pega os dados que o Django enviou e converte de JSON para um array JavaScript
+        const labels = JSON.parse('{{ chart_labels|safe }}');
+        const data = JSON.parse('{{ chart_data|safe }}');
+
+        const myChart = new Chart(ctx, {
+            type: 'bar', // Tipo de gráfico: barra
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Faturamento R$',
+                    data: data,
+                    backgroundColor: 'rgba(25, 135, 84, 0.6)', // Verde com 60% de opacidade
+                    borderColor: 'rgba(25, 135, 84, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: true,
+            }
+        });
+    });
+</script>
+{% endblock %}

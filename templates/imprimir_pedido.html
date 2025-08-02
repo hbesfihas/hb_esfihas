@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Impressão Pedido #{{ pedido.id }}</title>
+    <style>
+        /* Estilos essenciais para impressora térmica de 58mm */
+        @page {
+            /* Remove margens da impressão */
+            margin: 0;
+            size: 58mm auto;
+        }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 10pt; /* Tamanho de fonte legível para recibos */
+            line-height: 1.4;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            width: 58mm; /* Largura fixa do papel */
+        }
+        .recibo {
+            padding: 3mm; /* Pequena margem interna */
+            box-sizing: border-box;
+        }
+        h1, h2, p, ul, li {
+            margin: 0;
+            padding: 0;
+        }
+        .text-center { text-align: center; }
+        .header { text-align: center; margin-bottom: 5px; }
+        .header h1 { font-size: 14pt; font-weight: bold; }
+        .separador { border-top: 1px dashed #000; margin: 5px 0; }
+
+        .info-pedido p {
+            display: flex;
+            justify-content: space-between;
+        }
+        .itens-lista { list-style-type: none; margin-top: 5px; }
+        .item {
+            display: grid;
+            grid-template-columns: 1fr auto; /* Coluna para nome e outra para preço */
+            margin-bottom: 2px;
+        }
+        .item-nome { grid-column: 1 / 2; }
+        .item-subtotal { grid-column: 2 / 3; text-align: right; }
+
+        .totais { margin-top: 5px; }
+        .totais p {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+        }
+        .totais p.total-final { font-size: 12pt; }
+    </style>
+</head>
+<body>
+    <div class="recibo">
+        <div class="header">
+            <h1>{{ settings.NOME_LOJA }}</h1>
+            <p>Pedido #{{ pedido.id }}</p>
+            <p>{{ pedido.criado_em|date:"d/m/Y H:i" }}</p>
+        </div>
+        <div class="separador"></div>
+        <div class="info-cliente">
+            <p><strong>Cliente:</strong> {{ pedido.cliente.nome }}</p>
+        </div>
+        <div class="info-pedido">
+            <p><span>Tipo:</span> <span>{{ pedido.get_tipo_entrega_display }}</span></p>
+            {% if pedido.tipo_entrega == 'entrega' and pedido.bairro %}
+                <p><span>Bairro:</span> <span>{{ pedido.bairro.nome }}</span></p>
+                <p><strong>Endereço:</strong> {{ pedido.endereco_entrega }}</p>
+            {% endif %}
+        </div>
+        <div class="separador"></div>
+        
+        <ul class="itens-lista">
+            {% for item in pedido.itens.all %}
+                <li class="item">
+                    <span class="item-nome">{{ item.quantidade }}x {{ item.produto.nome }}</span>
+                    <span class="item-subtotal">R$ {{ item.subtotal|floatformat:2 }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="separador"></div>
+
+        <div class="totais">
+            {% if pedido.tipo_entrega == 'entrega' and pedido.bairro %}
+            <p><span>Frete:</span> <span>R$ {{ pedido.bairro.valor_frete|floatformat:2 }}</span></p>
+            {% endif %}
+            <p class="total-final"><span>TOTAL:</span> <span>R$ {{ pedido.total|floatformat:2 }}</span></p>
+        </div>
+        <div class="separador"></div>
+        <div class="footer text-center">
+            <p>Obrigado!</p>
+        </div>
+    </div>
+
+    <!-- Opcional: Adiciona um script para auto-imprimir e fechar a janela -->
+    <script>
+        window.onload = function() {
+            window.print();
+            // window.close(); // Descomente se quiser que a aba/janela feche após a impressão
+        }
+    </script>
+</body>
+</html>

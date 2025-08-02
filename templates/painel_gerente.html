@@ -1,47 +1,68 @@
 {% extends 'base.html' %}
-{% block title %}Painel de Pedidos | HB Esfihas{% endblock %}
 {% load static %}
+{% block title %}Painel de Pedidos | HB Esfihas{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">📋 Painel de Pedidos</h2>
-
-{% for pedido in pedidos %}
-<div class="card mb-4 shadow-sm">
-    <div class="card-header bg-light d-flex justify-content-between">
-        <strong>#{{ pedido.id }} - {{ pedido.cliente.first_name }}</strong>
-        <span>{{ pedido.criado_em|date:"d/m/Y H:i" }}</span>
-    </div>
-    <div class="card-body">
-        <p><strong>Status:</strong> {{ pedido.get_status_display }}</p>
-        <p><strong>Tipo:</strong> {{ pedido.get_tipo_entrega_display }}</p>
-        {% if pedido.tipo_entrega == 'entrega' %}
-            <p><strong>Bairro:</strong> {{ pedido.bairro.nome }} - R$ {{ pedido.bairro.valor|floatformat:2 }}</p>
-            <p><strong>Endereço:</strong> {{ pedido.endereco }}</p>
-        {% endif %}
+<div class="card card-body mb-4 text-center">
+    <h5 class="card-title">Status da Loja</h5>
+    <div class="d-flex justify-content-center align-items-center mt-2">
+        <span class="me-3 fs-5 fw-bold text-danger" id="status-fechada">FECHADA</span>
         
-        <ul class="list-group mb-3">
-            {% for item in pedido.itens.all %}
-            <li class="list-group-item d-flex justify-content-between">
-                {{ item.produto.nome }} x{{ item.quantidade }}
-                <span>R$ {{ item.subtotal|floatformat:2 }}</span>
-            </li>
-            {% endfor %}
-        </ul>
-
-        <h5 class="mb-3">Total: R$ {{ pedido.total|floatformat:2 }}</h5>
-
-        <div class="btn-group" role="group">
-            <a href="{% url 'atualizar_status_pedido' pedido.id 'aceito' %}" class="btn btn-outline-success btn-sm">✅ Aceitar</a>
-            <a href="{% url 'atualizar_status_pedido' pedido.id 'preparando' %}" class="btn btn-outline-warning btn-sm">👨‍🍳 Preparando</a>
-            <a href="{% url 'atualizar_status_pedido' pedido.id 'pronto' %}" class="btn btn-outline-primary btn-sm">📦 Pronto</a>
-            <a href="{% url 'atualizar_status_pedido' pedido.id 'saiu' %}" class="btn btn-outline-info btn-sm">🛵 Saiu</a>
-            <a href="{% url 'atualizar_status_pedido' pedido.id 'finalizado' %}" class="btn btn-outline-dark btn-sm">🏁 Finalizado</a>
-            <a href="{% url 'atualizar_status_pedido' pedido.id 'cancelado' %}" class="btn btn-outline-danger btn-sm">❌ Cancelar</a>
-        </div>
+        <label class="toggle-switch">
+            <input type="checkbox" id="toggle-loja-checkbox" {% if configuracao_loja.loja_aberta %}checked{% endif %}>
+            <span class="slider"></span>
+        </label>
+        
+        <span class="ms-3 fs-5 fw-bold text-success" id="status-aberta">ABERTA</span>
     </div>
 </div>
-{% empty %}
-    <p class="text-center">Nenhum pedido encontrado.</p>
-{% endfor %}
 
+<h2 class="text-center mb-4">📋 Painel de Pedidos</h2>
+
+<div class="card card-body mb-4">
+    <form method="GET" action="{% url 'painel_gerente' %}" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label for="data" class="form-label">Data</label>
+            <input type="date" name="data" id="data" class="form-control" value="{{ data_selecionada }}">
+        </div>
+        <div class="col-md-4">
+            <label for="cliente" class="form-label">Cliente</label>
+            <select name="cliente" id="cliente" class="form-select">
+                <option value="">Todos os Clientes</option>
+                {% for cliente in todos_clientes %}
+                    <option value="{{ cliente.id }}" {% if cliente.id == cliente_selecionado_id %}selected{% endif %}>
+                        {{ cliente.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="pago" class="form-label">Pagamento</label>
+            <select name="pago" id="pago" class="form-select">
+                <option value="">Todos</option>
+                <option value="sim" {% if pago_selecionado == 'sim' %}selected{% endif %}>Pagos</option>
+                <option value="nao" {% if pago_selecionado == 'nao' %}selected{% endif %}>Não Pagos</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+    <a href="{% url 'painel_gerente' %}" class="mt-2 text-center">Limpar filtros e ver pedidos de hoje</a>
+</div>
+
+
+<div id="lista-pedidos">
+    {% for pedido in pedidos %}
+        {% include 'partials/card_pedido_gerente.html' with pedido=pedido %}
+    {% empty %}
+        <p class="text-center" id="sem-pedidos-msg">Nenhum pedido encontrado para os filtros selecionados.</p>
+    {% endfor %}
+</div>
+
+<audio id="som-notificacao" src="{% static 'sons/notification.mp3' %}" preload="auto"></audio>
+
+<script src="{% static 'js/painel_gerente.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/estilo.css' %}">
 {% endblock %}

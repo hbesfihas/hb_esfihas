@@ -1,24 +1,27 @@
 {% extends 'base.html' %}
-{% block title %}Meus Pedidos | HB Esfihas{% endblock %}
 {% load static %}
+{% block title %}Meus Pedidos | HB Esfihas{% endblock %}
 
 {% block content %}
 <h2 class="text-center mb-4">📦 Meus Pedidos</h2>
 
 {% if pedidos %}
     {% for pedido in pedidos %}
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-light">
+        <div class="card mb-4 shadow-sm 
+            {% if pedido.status == 'preparando' %}bg-warning text-dark bg-opacity-50
+            {% elif pedido.status == 'pronto' %}bg-info text-dark bg-opacity-50
+            {% elif pedido.status == 'entregue' %}bg-success text-white
+            {% elif pedido.status == 'cancelado' %}bg-secondary text-white
+            {% else %}bg-light
+            {% endif %}
+        " id="pedido-card-{{ pedido.id }}">
+            <div class="card-header">
                 <strong>Pedido #{{ pedido.id }}</strong> • {{ pedido.criado_em|date:"d/m/Y H:i" }}
             </div>
             <div class="card-body">
-                <p><strong>Status:</strong> {{ pedido.get_status_display }}</p>
+                <p><strong>Status:</strong> <span id="status-text-{{ pedido.id }}">{{ pedido.get_status_display }}</span></p>
                 <p><strong>Tipo de Entrega:</strong> {{ pedido.get_tipo_entrega_display }}</p>
-                {% if pedido.tipo_entrega == 'entrega' %}
-                    <p><strong>Bairro:</strong> {{ pedido.bairro.nome }} (R$ {{ pedido.bairro.valor|floatformat:2 }})</p>
-                    <p><strong>Endereço:</strong> {{ pedido.endereco }}</p>
-                {% endif %}
-
+                
                 <ul class="list-group mb-3">
                     {% for item in pedido.itens.all %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -37,4 +40,10 @@
 {% endif %}
 
 <a href="{% url 'home' %}" class="btn btn-outline-primary d-block mx-auto mt-4" style="width: 200px;">Voltar ao Cardápio</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+</script>
 {% endblock %}

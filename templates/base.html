@@ -1,70 +1,89 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}HB Esfihas{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Bootstrap 5 via CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="icon" href="{% static 'img/logo.jpg' %}" type="image/png">'
-    <style>
-        body {
-            background-color: #fffaf0;
-        }
-        .escondido {
-            display: none !important;
-        }
-        .product-card {
-            max-width: 200px;
-            border: 1px solid #ddd;
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 20px;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-        .product-img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
+    <link rel="stylesheet" href="{% static 'css/estilo.css' %}">
 
-        .product-name {
-            font-weight: bold;
-            margin-top: 10px;
-        }
-
-        .product-description {
-            font-size: 0.9rem;
-            color: #555;
-        }
-
-        .product-price {
-            font-size: 1rem;
-            color: #28a745;
-            font-weight: 600;
-            margin-top: 5px;
-        }
-        .degrade {
-        width: 300px;
-        height: 200px;
-        background: linear-gradient(to bottom, rgba(0, 0, 255, 0.308), rgba(255, 0, 0, 0.349));
-        }
-    </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body>
-    <div class="container">
-        {% block content %}{% endblock %}
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <img src="{% static 'img/logo.jpg' %}" alt="Logo" class="rounded-circle" width="40" height="40">
+            </a>
+
+
+            <div class="navbar-text fundo">
+                Bem-vindo, {{ user.nome }}!
+                <br>Você tem {{ user.pontos }} pontos.
+            </div>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">Cardápio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'meus_pedidos' %}">Meus Pedidos</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'painel_gerente' %}">Painel Gerente</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard_vendas' %}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin" target="_blank">Admin Django</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'meus_pedidos' %}">Meus Pedidos</a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout_cliente' %}">Sair <i
+                                class="bi bi-box-arrow-right"></i></a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% if configuracao_loja.loja_aberta %}
+    <div class="banner-loja text-center bg-success text-white">
+        <i class="bi bi-shop"></i> Loja Aberta - Faça seu pedido!
     </div>
+    {% else %}
+    <div class="banner-loja text-center bg-danger text-white">
+        <i class="bi bi-shop-window"></i> Loja Fechada - Abrimos às 18h
+    </div>
+    {% endif %}
 
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
 
-    <!-- Bootstrap JS (necessário para accordion funcionar) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

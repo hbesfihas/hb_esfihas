@@ -53,6 +53,9 @@ class Categoria(models.Model):
     nome = models.CharField(max_length=100)
     icone = models.ImageField(upload_to='icones/', blank=True, null=True)
     ordem = models.PositiveIntegerField(default=0)
+
+    cor = models.CharField(max_length=7, default='#FFFFFF', help_text='Cor em formato hexadecimal, ex: #FF5733')
+    icone_bootstrap = models.CharField(max_length=50, blank=True, null=True, help_text='Nome do ícone Bootstrap, ex: bi bi-pizza')
     def __str__(self):
         return self.nome
 
@@ -63,6 +66,7 @@ class Produto(models.Model):
     preco = models.DecimalField(max_digits=6, decimal_places=2)
     imagem = models.ImageField(upload_to='produtos/', blank=True, null=True)
     disponivel = models.BooleanField(default=True)
+    estoque = models.PositiveIntegerField(default=0)  # Quantidade em estoque
 
     def __str__(self):
         return self.nome
@@ -114,3 +118,12 @@ class ItemPedido(models.Model):
     def __str__(self):
         return f"{self.quantidade}x {self.produto.nome}"
    
+
+class ConfiguracaoLoja(models.Model):
+    loja_aberta = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super(ConfiguracaoLoja, self).save(*args, **kwargs)
+    def __str__(self):
+        return "Configuração da Loja"
