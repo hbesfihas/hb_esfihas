@@ -57,7 +57,7 @@
 <body>
     <div class="recibo">
         <div class="header">
-            <h1>{{ settings.NOME_LOJA }}</h1>
+            <h1>HB Esfihas</h1>
             <p>Pedido #{{ pedido.id }}</p>
             <p>{{ pedido.criado_em|date:"d/m/Y H:i" }}</p>
         </div>
@@ -70,6 +70,13 @@
             {% if pedido.tipo_entrega == 'entrega' and pedido.bairro %}
                 <p><span>Bairro:</span> <span>{{ pedido.bairro.nome }}</span></p>
                 <p><strong>Endereço:</strong> {{ pedido.endereco_entrega }}</p>
+            {% endif %}
+            {% if pedido.troco_para %}
+                <p><span>Troco para:</span> <span>R$ {{ pedido.troco_para|floatformat:2 }}</span></p>
+            {% endif %}
+            <p><span>Pagamento:</span> <span>{{ pedido.forma_pagamento }}</span></p>
+            {% if pedido.forma_pagamento == 'cartao_credito' %}
+                <p><span>Taxa Cartão:</span> <span>R$ {{ pedido.taxa_cartao|floatformat:2 }}</span></p>
             {% endif %}
         </div>
         <div class="separador"></div>

@@ -1,6 +1,5 @@
 // Em static/js/gerenciador-sacola.js
 
-// --- LÓGICA EXCLUSIVA DA PÁGINA DE RESUMO ---
 const pageResumo = document.getElementById('listaResumo');
 if (pageResumo) {
 
@@ -20,6 +19,10 @@ if (pageResumo) {
     const inputSacolaEl = document.getElementById('inputSacola');
     const radiosPagamento = document.querySelectorAll('input[name="forma_pagamento"]');
     const campoTrocoDiv = document.getElementById('campo-troco');
+    const enderecoInput = document.getElementById('endereco');
+    const btnConfirmar = document.getElementById('btn-confirmar-pedido'); // Seletor para o botão
+    const clienteUltimoBairro = document.getElementById('clienteUltimoBairro')?.value || null;
+    console.log("Cliente último bairro:", clienteUltimoBairro);
 
     // --- Funções ---
     function renderizarListaResumo() {
@@ -27,7 +30,6 @@ if (pageResumo) {
         pageResumo.innerHTML = "";
         if (Object.keys(sacola).length === 0) {
             pageResumo.innerHTML = '<li class="list-group-item">Sua sacola está vazia.</li>';
-            formEl.querySelector('button[type="submit"]').disabled = true;
         } else {
             for (const id in sacola) {
                 const item = sacola[id];
@@ -42,35 +44,31 @@ if (pageResumo) {
     }
 
     function atualizarTotaisResumo() {
+        // ... (esta função continua exatamente como a sua, sem alterações) ...
         let subtotal = 0;
         for (const id in sacola) {
             subtotal += parseFloat(sacola[id].preco) * parseInt(sacola[id].quantidade);
         }
-
-        // LÓGICA DE VISIBILIDADE DO FRETE
         let frete = 0;
-        const entregaSelecionada = document.querySelector('input[name="tipo_entrega"]:checked').value === 'entrega';
+        const entregaSelecionada = document.querySelector('input[name="tipo_entrega"]:checked')?.value === 'entrega';
         if (entregaSelecionada) {
-            linhaFreteEl.classList.remove('escondido'); // MOSTRA a linha
+            linhaFreteEl.classList.remove('escondido');
             const selectedBairro = bairroSelect.options[bairroSelect.selectedIndex];
             frete = parseFloat(selectedBairro.getAttribute('data-frete') || 0);
         } else {
-            linhaFreteEl.classList.add('escondido'); // ESCONDE a linha
+            linhaFreteEl.classList.add('escondido');
             frete = 0;
         }
-
-        // LÓGICA DE VISIBILIDADE DA TAXA DO CARTÃO
         const pagamentoCredito = document.getElementById('credito');
         let taxa = 0;
-        if (pagamentoCredito.checked) {
-            linhaTaxaEl.classList.remove('escondido'); // MOSTRA a linha
+        if (pagamentoCredito && pagamentoCredito.checked) {
+            linhaTaxaEl.classList.remove('escondido');
             const taxaPercentual = parseFloat(pagamentoCredito.getAttribute('data-taxa') || 0);
             taxa = (subtotal + frete) * (taxaPercentual / 100);
         } else {
-            linhaTaxaEl.classList.add('escondido'); // ESCONDE a linha
+            linhaTaxaEl.classList.add('escondido');
             taxa = 0;
         }
-
         const total = subtotal + frete + taxa;
         subtotalEl.textContent = `R$ ${subtotal.toFixed(2)}`;
         freteEl.textContent = `R$ ${frete.toFixed(2)}`;
@@ -79,6 +77,7 @@ if (pageResumo) {
     }
 
     function gerenciarEscolha(radioInputs) {
+        // ... (esta função continua exatamente como a sua, sem alterações) ...
         radioInputs.forEach(radio => {
             const card = radio.closest('.choice-card');
             if (card) {
@@ -88,30 +87,75 @@ if (pageResumo) {
         });
     }
 
+    // --- NOVA FUNÇÃO DE VALIDAÇÃO ---
+    function validarFormulario() {
+        let isValido = true;
+        const tipoEntrega = document.querySelector('input[name="tipo_entrega"]:checked');
+        const formaPagamento = document.querySelector('input[name="forma_pagamento"]:checked');
+
+        if (!formaPagamento) {
+            isValido = false;
+        }
+
+        if (tipoEntrega && tipoEntrega.value === 'entrega') {
+            if (!bairroSelect.value || !enderecoInput.value.trim()) {
+                isValido = false;
+            }
+        }
+
+        // Não pode finalizar com a sacola vazia
+        if (Object.keys(sacola).length === 0) {
+            isValido = false;
+        }
+
+        // Habilita ou desabilita o botão
+        btnConfirmar.disabled = !isValido;
+    }
+
     function gerenciarVisuais() {
         gerenciarEscolha(tipoEntregaRadios);
         gerenciarEscolha(radiosPagamento);
-        const entregaSelecionada = document.querySelector('input[name="tipo_entrega"]:checked').value === 'entrega';
+        const entregaSelecionada = document.querySelector('input[name="tipo_entrega"]:checked')?.value === 'entrega';
         camposEntregaDiv.style.display = entregaSelecionada ? 'block' : 'none';
         bairroSelect.required = entregaSelecionada;
-        if (!entregaSelecionada) bairroSelect.value = "";
+        enderecoInput.required = entregaSelecionada;
+        if (!entregaSelecionada) bairroSelect.value = clienteUltimoBairro || "";
         const pagamentoDinheiro = document.querySelector('input[name="forma_pagamento"][value="dinheiro"]');
-        if (campoTrocoDiv) {
+        if (campoTrocoDiv && pagamentoDinheiro) {
             campoTrocoDiv.style.display = pagamentoDinheiro.checked ? 'block' : 'none';
         }
         atualizarTotaisResumo();
+        validarFormulario(); // <-- Chama a validação aqui
     }
 
     // --- Listeners ---
     tipoEntregaRadios.forEach(radio => radio.addEventListener('change', gerenciarVisuais));
     radiosPagamento.forEach(radio => radio.addEventListener('change', gerenciarVisuais));
-    bairroSelect.addEventListener('change', atualizarTotaisResumo);
-    formEl.addEventListener('submit', () => { inputSacolaEl.value = JSON.stringify(sacola); });
-    
+
+    bairroSelect.addEventListener('change', () => {
+        atualizarTotaisResumo();
+        validarFormulario();
+    });
+    // Adiciona o listener que faltava para o campo de endereço
+    enderecoInput.addEventListener('input', validarFormulario);
+
+    formEl.addEventListener('submit', () => {
+        btnConfirmar.disabled = true;
+        btnConfirmar.textContent = 'Enviando...';
+        inputSacolaEl.value = JSON.stringify(sacola);
+    });
+
     // --- Inicialização da Página ---
     renderizarListaResumo();
-    gerenciarVisuais();
-    if (bairroSelect.value || document.querySelector('input[name="endereco"]').value) {
-        document.querySelector('input[name="tipo_entrega"][value="entrega"]').click();
+    // Verifica se o Django já selecionou um bairro.
+    const bairroJaSelecionado = bairroSelect.value !== "";
+
+    if (bairroJaSelecionado) {
+        // Se sim, marca o radio 'entrega' como selecionado no código
+        document.querySelector('input[name="tipo_entrega"][value="entrega"]').checked = true;
     }
+
+    // Agora, chama a função principal que atualiza todo o visual
+    // Ela vai ler o estado dos botões (incluindo o que acabamos de marcar) e agir de acordo
+    gerenciarVisuais();
 }

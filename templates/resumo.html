@@ -40,34 +40,44 @@
                 </div>
 
                 <div id="camposEntrega" class="p-3 mb-4 border rounded bg-light" style="display: none;">
+                    <div class="hidden" id="clienteUltimoBairro" data-ultimo-bairro="{{ user.ultimo_bairro.id|default:'' }}"></div>
+
                     <div class="col-12 mb-3">
                         <label for="selectBairro" class="form-label">Bairro</label>
                         <select name="bairro" id="selectBairro" class="form-select">
-                            <option value="" data-frete="0">Selecione o bairro</option>
-                            {% for bairro in bairros %}<option value="{{ bairro.id }}" data-frete="{{ bairro.valor_frete }}" {% if user.ultimo_bairro.id == bairro.id %}selected{% endif %}>{{ bairro.nome }}</option>{% endfor %}
+                            <option value="{{ user.ultimo_bairro.id|default:'' }}" data-frete="{{ user.ultimo_bairro.valor_frete|default:'0' }}">{{ user.ultimo_bairro.nome|default:'Selecione o bairro' }}</option>
+                            {% for bairro in bairros %}
+                                <option value="{{ bairro.id }}" 
+                                        data-frete="{{ bairro.valor_frete }}">
+                                    {{ bairro.nome }}
+                                </option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="col-12">
                         <label for="endereco" class="form-label">Endereço Completo</label>
-                        <input type="text" name="endereco" class="form-control" placeholder="Rua, Número, Complemento" value="{{ user.ultimo_endereco|default:'' }}">
+                        <input type="text" name="endereco" id="endereco" class="form-control" 
+                            placeholder="Rua, Número, Complemento" 
+                            value="{{ user.ultimo_endereco|default:'' }}">
                     </div>
+
                 </div>
 
                 <h5 class="mb-3">Forma de Pagamento</h5>
                 <div class="row row-cols-2 row-cols-lg-4 g-3 mb-4">
                     <div class="col"><label class="choice-card h-100"><input type="radio" name="forma_pagamento" value="dinheiro"><i class="bi bi-cash"></i><span>Dinheiro</span></label></div>
-                    <div class="col"><label class="choice-card h-100"><input type="radio" name="forma_pagamento" value="pix"><i class="bi bi-qr-code"></i><span>Pix</span></label></div>
+                    <div class="col"><label class="choice-card h-100"><input type="radio" name="forma_pagamento" value="pix" checked><i class="bi bi-qr-code"></i><span>Pix</span></label></div>
                     <div class="col"><label class="choice-card h-100"><input type="radio" name="forma_pagamento" value="cartao_debito"><i class="bi bi-credit-card"></i><span>Débito</span></label></div>
                     <div class="col"><label class="choice-card h-100"><input type="radio" name="forma_pagamento" id="credito" value="cartao_credito" data-taxa="{{ taxa_cartao_percentual }}"><i class="bi bi-credit-card-fill"></i><span>Crédito</span></label></div>
                 </div>
 
                 <div id="campo-troco" class="mb-4" style="display: none;">
                     <label for="troco_para" class="form-label">Precisa de troco? Para qual valor?</label>
-                    <div class="input-group"><span class="input-group-text">R$</span><input type="text" name="troco_para" id="troco_para" class="form-control" placeholder="Ex: 50,00"></div>
+                    <div class="input-group"><span class="input-group-text">R$</span><input type="number" name="troco_para" id="troco_para" class="form-control" placeholder="Ex: 50,00"></div>
                 </div>
 
                 <hr class="my-4">
-                <button type="submit" class="w-100 btn btn-primary btn-lg">Confirmar e Enviar Pedido</button>
+                <button type="submit" id="btn-confirmar-pedido" class="w-100 btn btn-primary btn-lg" disabled>Confirmar e Enviar Pedido</button>
             </form>
         </div>
     </div>

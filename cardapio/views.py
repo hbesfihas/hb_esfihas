@@ -123,7 +123,7 @@ def criar_pedido(request):
             bairro_id = request.POST.get('bairro')
             endereco = request.POST.get('endereco', '').strip()
             forma_pagamento = request.POST.get('forma_pagamento')
-            troco_para_str = request.POST.get('troco_para', None)
+            troco_para = request.POST.get('troco_para', None)
             if not dados_sacola or not tipo_entrega:
                 return HttpResponseBadRequest("Dados do pedido estão incompletos.")
 
@@ -159,12 +159,7 @@ def criar_pedido(request):
 
             total_final = subtotal_pedido + valor_frete + taxa_cartao
             
-            # Se o cliente pediu troco, valida se é maior que o total
-            if forma_pagamento == 'dinheiro' and troco_para_str:
-                try:
-                    troco_para = Decimal(troco_para_str)
-                except:
-                    return HttpResponseBadRequest("Valor de troco inválido.")
+
 
             # 4. CRIAR O PEDIDO
             pedido = Pedido.objects.create(
@@ -174,6 +169,7 @@ def criar_pedido(request):
                 bairro=bairro,
                 endereco_entrega=endereco if tipo_entrega == 'entrega' else '',
                 forma_pagamento=forma_pagamento,
+                troco_para=Decimal(troco_para).quantize(Decimal("0.01")) if troco_para else None,
             )
 
             # 5. CRIAR ITENS DO PEDIDO E DAR BAIXA NO ESTOQUE
@@ -313,6 +309,12 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 @staff_member_required
 def imprimir_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
+    taxa_cartao = Decimal("0.00")
+    if pedido.forma_pagamento == 'cartao_credito':
+        taxa_percentual = Decimal(str(settings.TAXA_CARTAO_PERCENTUAL))
+        taxa_cartao = pedido.total * (taxa_percentual / 100)
+        taxa_cartao = taxa_cartao.quantize(Decimal("0.01"))
+    pedido.taxa_cartao = taxa_cartao
     context = {
         'pedido': pedido,
     }
