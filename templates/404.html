@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Página Não Encontrada | {{ settings.NOME_LOJA }}{% endblock %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <h1 class="display-1 fw-bold text-primary">404</h1>
+            <h2 class="mb-4">Página Não Encontrada</h2>
+            <p class="lead text-muted mb-4">
+                Desculpe, a página que você está procurando não existe ou foi movida.
+                Que tal voltar para o nosso cardápio?
+            </p>
+            <a href="{% url 'home' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-house-door-fill"></i> Ir para a Página Inicial
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
