@@ -16,7 +16,7 @@ from django.template.loader import render_to_string
 import io 
 import sys
 from django.utils import timezone
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Count, Avg
 from django.db.models.functions import Trunc
 from datetime import timedelta
 from django.db import transaction 
@@ -123,7 +123,7 @@ def criar_pedido(request):
             bairro_id = request.POST.get('bairro')
             endereco = request.POST.get('endereco', '').strip()
             forma_pagamento = request.POST.get('forma_pagamento')
-
+            troco_para_str = request.POST.get('troco_para', None)
             if not dados_sacola or not tipo_entrega:
                 return HttpResponseBadRequest("Dados do pedido estão incompletos.")
 
@@ -158,6 +158,13 @@ def criar_pedido(request):
                 taxa_cartao = (subtotal_pedido + valor_frete) * (taxa_percentual / 100)
 
             total_final = subtotal_pedido + valor_frete + taxa_cartao
+            
+            # Se o cliente pediu troco, valida se é maior que o total
+            if forma_pagamento == 'dinheiro' and troco_para_str:
+                try:
+                    troco_para = Decimal(troco_para_str)
+                except:
+                    return HttpResponseBadRequest("Valor de troco inválido.")
 
             # 4. CRIAR O PEDIDO
             pedido = Pedido.objects.create(
@@ -192,6 +199,14 @@ def criar_pedido(request):
                 cliente.pontos += pontos_ganhos
                 cliente.save(update_fields=['pontos'])
 
+            # --- LÓGICA PARA SALVAR O ÚLTIMO ENDEREÇO ---
+            if tipo_entrega == 'entrega':
+                cliente = request.user
+                cliente.ultimo_endereco = endereco
+                cliente.ultimo_bairro = bairro
+                cliente.save(update_fields=['ultimo_endereco', 'ultimo_bairro'])
+            # --- FIM DA LÓGICA ---
+            
             # 7. NOTIFICAR GERENTES VIA WEBSOCKET
             html_pedido = render_to_string(
                 'partials/card_pedido_gerente.html',
@@ -218,45 +233,41 @@ def meus_pedidos(request):
 
 @staff_member_required
 def painel_gerente(request):
-    # --- LÓGICA DE FILTRAGEM ---
-    
-    # Pega os valores dos filtros da URL (via GET)
-    data_filtro = request.GET.get('data', None)
-    cliente_filtro_id = request.GET.get('cliente', None)
-    pago_filtro = request.GET.get('pago', None)
-    # Base da nossa busca: todos os pedidos, ordenados do mais novo para o mais antigo
-    pedidos = Pedido.objects.all().order_by('-criado_em')
+    # Pega os valores dos filtros. Usamos '' (string vazia) como padrão.
+    data_filtro = request.GET.get('data', '')
+    cliente_filtro_id = request.GET.get('cliente', '')
+    pago_filtro = request.GET.get('pago', '')
 
-    # Se um cliente foi selecionado no filtro, aplica o filtro
+    # Começa com todos os pedidos
+    pedidos = Pedido.objects.select_related('cliente', 'bairro').all().order_by('-criado_em')
+
+    # Aplica os filtros apenas se um valor foi fornecido
     if cliente_filtro_id:
         pedidos = pedidos.filter(cliente_id=cliente_filtro_id)
-
-    # Se uma data foi selecionada, aplica o filtro.
-    # Se nenhuma data foi selecionada, filtra pelos pedidos de HOJE por padrão.
+    
     if data_filtro:
         pedidos = pedidos.filter(criado_em__date=data_filtro)
-    else:
-        # Se o campo de data estiver vazio, mostre apenas os de hoje
-        pedidos = pedidos.filter(criado_em__date=timezone.localdate())
-
+    
     if pago_filtro == 'sim':
         pedidos = pedidos.filter(pago=True)
     elif pago_filtro == 'nao':
         pedidos = pedidos.filter(pago=False)
 
-    # --- FIM DA LÓGICA DE FILTRAGEM ---
+    # Comportamento padrão: se a página for carregada sem NENHUM filtro, mostra os de hoje.
+    if not request.GET:
+        pedidos = pedidos.filter(criado_em__date=timezone.localdate())
+        data_selecionada = timezone.localdate().strftime('%Y-%m-%d')
+    else:
+        data_selecionada = data_filtro
 
-    # Buscamos todos os clientes para popular o menu dropdown do filtro
     todos_clientes = Cliente.objects.filter(is_admin=False).order_by('nome')
     
-    # Prepara os dados para enviar ao template
     context = {
         'pedidos': pedidos,
         'todos_clientes': todos_clientes,
-        # Envia os valores selecionados de volta para o template para manter os campos preenchidos
-        'data_selecionada': data_filtro if data_filtro else timezone.localdate().strftime('%Y-%m-%d'),
+        'data_selecionada': data_selecionada,
         'cliente_selecionado_id': int(cliente_filtro_id) if cliente_filtro_id else None,
-        'pago_selecionado': pago_filtro if pago_filtro in ['sim', 'nao'] else None,
+        'pago_selecionado': pago_filtro,
     }
     return render(request, 'painel_gerente.html', context)
 
@@ -388,16 +399,48 @@ def dashboard_vendas(request):
 
     data = [float(item['faturamento']) for item in chart_data]
 
+   # --- 3. NOVOS KPIs RÁPIDOS ---
+    pedidos_pagos = Pedido.objects.filter(pago=True)
+    faturamento_total_geral = pedidos_pagos.aggregate(Sum('total'))['total__sum'] or Decimal('0.00')
+    total_pedidos_pagos = pedidos_pagos.count()
+    ticket_medio = faturamento_total_geral / total_pedidos_pagos if total_pedidos_pagos > 0 else Decimal('0.00')
+
+    # --- 4. TOP 5 PRODUTOS MAIS VENDIDOS ---
+    top_produtos = ItemPedido.objects.values('produto__nome').annotate(
+        quantidade_vendida=Sum('quantidade')
+    ).order_by('-quantidade_vendida')[:5]
+
+    # --- 5. TOP 5 CLIENTES (POR VALOR GASTO) ---
+    top_clientes = Cliente.objects.filter(is_admin=False, pedido__pago=True).annotate(
+        total_gasto=Sum('pedido__total')
+    ).order_by('-total_gasto')[:5]
+    
+    # --- 6. DADOS PARA O GRÁFICO DE PIZZA (TIPO DE ENTREGA) ---
+    pedidos_por_tipo = Pedido.objects.values('tipo_entrega').annotate(
+        total=Count('id')
+    ).order_by('tipo_entrega')
+
+    pie_chart_labels = [dict(Pedido.tipo_entrega.field.choices).get(item['tipo_entrega']) for item in pedidos_por_tipo]
+    pie_chart_data = [item['total'] for item in pedidos_por_tipo]
+
     context = {
         'clientes_devedores': clientes_devedores,
         'chart_labels': json.dumps(labels),
         'chart_data': json.dumps(data),
         'periodo_selecionado': periodo,
+        # Adicionando os novos dados ao contexto
+        'faturamento_total_geral': faturamento_total_geral,
+        'total_pedidos_pagos': total_pedidos_pagos,
+        'ticket_medio': ticket_medio,
+        'top_produtos': top_produtos,
+        'top_clientes': top_clientes,
+        'pie_chart_labels': json.dumps(pie_chart_labels),
+        'pie_chart_data': json.dumps(pie_chart_data),
     }
     return render(request, 'dashboard.html', context)
 
 
-@login_required
+
 @login_required
 def validar_estoque_api(request):
     if request.method == 'POST':

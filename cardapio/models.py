@@ -1,7 +1,14 @@
+from decimal import Decimal
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 
+class Bairro(models.Model):
+    nome = models.CharField(max_length=100)
+    valor_frete = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        return self.nome
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, whatsapp, nome, password=None):
@@ -29,6 +36,7 @@ class Cliente(AbstractBaseUser):
     is_admin = models.BooleanField(default=False)
     pontos = models.IntegerField(default=0)
     ultimo_endereco = models.TextField(null=True, blank=True)
+    ultimo_bairro = models.ForeignKey(Bairro, on_delete=models.SET_NULL, null=True, blank=True)
 
     USERNAME_FIELD = 'whatsapp'  # Campo usado para login
     REQUIRED_FIELDS = ['nome']   # Campos obrigatórios ao criar o usuário
@@ -59,6 +67,31 @@ class Categoria(models.Model):
     def __str__(self):
         return self.nome
 
+class Insumo(models.Model):
+    UNIDADE_CHOICES = [
+        ('g', 'Gramas'),
+        ('kg', 'Quilogramas'),
+        ('un', 'Unidades'),
+        ('ml', 'Mililitros'),
+        ('l', 'Litros'),
+    ]
+    nome = models.CharField(max_length=100, unique=True)
+    unidade_medida = models.CharField(max_length=2, choices=UNIDADE_CHOICES)
+    estoque_atual = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
+    custo_unidade = models.DecimalField(max_digits=10, decimal_places=4, help_text="Custo por grama, unidade, ml, etc.")
+
+    def __str__(self):
+        return f"{self.nome} ({self.get_unidade_medida_display()})"
+
+class ItemReceita(models.Model):
+    produto = models.ForeignKey('Produto', on_delete=models.CASCADE, related_name='receita')
+    insumo = models.ForeignKey(Insumo, on_delete=models.CASCADE)
+    quantidade = models.DecimalField(max_digits=10, decimal_places=3)
+
+    def __str__(self):
+        return f"{self.quantidade} {self.insumo.get_unidade_medida_display()} de {self.insumo.nome} para {self.produto.nome}"
+
+
 class Produto(models.Model):
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     nome = models.CharField(max_length=100)
@@ -67,16 +100,18 @@ class Produto(models.Model):
     imagem = models.ImageField(upload_to='produtos/', blank=True, null=True)
     disponivel = models.BooleanField(default=True)
     estoque = models.PositiveIntegerField(default=0)  # Quantidade em estoque
+    insumos = models.ManyToManyField(Insumo, through=ItemReceita)
+    
+    # Nova função para calcular o custo do produto
+    def custo_de_producao(self):
+        custo_total = Decimal(0)
+        for item in self.receita.all():
+            custo_total += item.insumo.custo_unidade * item.quantidade
+        return custo_total.quantize(Decimal("0.01"))
 
     def __str__(self):
         return self.nome
 
-class Bairro(models.Model):
-    nome = models.CharField(max_length=100)
-    valor_frete = models.DecimalField(max_digits=5, decimal_places=2)
-
-    def __str__(self):
-        return self.nome
 
 
 class Pedido(models.Model):
@@ -104,8 +139,8 @@ class Pedido(models.Model):
     )
     status = models.CharField(max_length=20,choices=STATUS_CHOICES,default='pendente')
     endereco_entrega = models.TextField(blank=True, null=True)
-    forma_pagamento = models.CharField(max_length=20, default='dinheiro_pix')
-    troco = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    forma_pagamento = models.CharField(max_length=20, default='dinheiro')
+    troco_para = models.DecimalField(max_digits=8, decimal_places=0, null=True, blank=True)
     def __str__(self):
         return f"Pedido #{self.id} de {self.cliente.nome} - {self.criado_em.strftime('%d/%m %H:%M')}"
     
@@ -127,3 +162,7 @@ class ConfiguracaoLoja(models.Model):
         super(ConfiguracaoLoja, self).save(*args, **kwargs)
     def __str__(self):
         return "Configuração da Loja"
+    
+    
+
+    

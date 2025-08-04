@@ -20,61 +20,65 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
-                <img src="{% static 'img/logo.jpg' %}" alt="Logo" class="rounded-circle" width="40" height="40">
+                <img src="{% static 'img/logo.jpg' %}" alt="Logo" class="rounded-circle logo">
             </a>
 
-
-            <div class="navbar-text fundo">
-                Bem-vindo, {{ user.nome }}!
-                <br>Você tem {{ user.pontos }} pontos.
+            {% if user.is_authenticated %}
+            <div class="mx-auto d-lg-block">
+                <div class="user-widget">
+                    <div class="user-info text-center">
+                        <span>Bem-vindo, {{ user.nome }}!</span>
+                        <small>{{ user.pontos }} pontos</small>
+                    </div>
+                </div>
             </div>
+            {% endif %}
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
+
+
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'home' %}">Cardápio</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'meus_pedidos' %}">Meus Pedidos</a>
-                    </li>
-                    {% if user.is_authenticated %}
-                    {% if user.is_staff %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'painel_gerente' %}">Painel Gerente</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard_vendas' %}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin" target="_blank">Admin Django</a>
-                    </li>
-                    {% else %}
+
+                    {% if user.is_authenticated and not user.is_staff %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'meus_pedidos' %}">Meus Pedidos</a>
                     </li>
                     {% endif %}
+
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'painel_gerente' %}">Painel</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard_vendas' %}">Dashboard</a>
+                    </li>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'logout_cliente' %}">Sair <i
                                 class="bi bi-box-arrow-right"></i></a>
                     </li>
                     {% endif %}
-
                 </ul>
             </div>
         </div>
     </nav>
-
     {% if configuracao_loja.loja_aberta %}
-    <div class="banner-loja text-center bg-success text-white">
-        <i class="bi bi-shop"></i> Loja Aberta - Faça seu pedido!
+    <div class="banner-loja bg-success text-white">
+        👍 Loja Aberta 😋
     </div>
     {% else %}
-    <div class="banner-loja text-center bg-danger text-white">
-        <i class="bi bi-shop-window"></i> Loja Fechada - Abrimos às 18h
+    <div class="banner-loja bg-danger text-white">
+      👎  Loja Fechada 😩
     </div>
     {% endif %}
 

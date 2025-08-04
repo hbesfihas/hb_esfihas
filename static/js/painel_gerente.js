@@ -3,8 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const listaPedidosEl = document.getElementById('lista-pedidos');
     const somNotificacao = document.getElementById('som-notificacao');
-    const btnToggleLoja = document.getElementById('btn-toggle-loja');
-    const statusLojaTexto = document.getElementById('status-loja-texto');
     const toggleLojaCheckbox = document.getElementById('toggle-loja-checkbox');
     const statusAbertaEl = document.getElementById('status-aberta');
     const statusFechadaEl = document.getElementById('status-fechada');

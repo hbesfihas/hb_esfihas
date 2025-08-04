@@ -16,7 +16,10 @@
     <div class="card-body">
         <p><strong>Status:</strong> <span id="status-text-{{ pedido.id }}">{{ pedido.get_status_display }}</span></p>
         <p><strong>Tipo:</strong> {{ pedido.get_tipo_entrega_display }}</p>
-
+        <p><strong>Forma Pagamento: </strong> {{ pedido.forma_pagamento}} </p>
+        {% if pedido.forma_pagamento == 'dinheiro' %}
+        <p><strong>Troco para:</strong> R$ {{ pedido.troco_para|floatformat:2 }}</p>
+        {% endif %}
         {% if pedido.tipo_entrega == 'entrega' and pedido.bairro %}
         <p><strong>Bairro:</strong> {{ pedido.bairro.nome }} - R$ {{ pedido.bairro.valor_frete|floatformat:2 }}</p>
         <p><strong>Endereço:</strong> {{ pedido.endereco_entrega }}</p>

@@ -53,7 +53,83 @@
             </div>
         </div>
     </div>
+
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Faturamento Total (Pago)</h6>
+                <p class="card-text fs-4 fw-bold">R$ {{ faturamento_total_geral|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total de Pedidos (Pagos)</h6>
+                <p class="card-text fs-4 fw-bold">{{ total_pedidos_pagos }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Ticket Médio</h6>
+                <p class="card-text fs-4 fw-bold">R$ {{ ticket_medio|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
 </div>
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm">
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-bold">🏆 Top 5 Produtos Mais Vendidos</div>
+            <ul class="list-group list-group-flush">
+                {% for produto in top_produtos %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>{{ produto.produto__nome }}</span>
+                    <span class="badge bg-primary rounded-pill">{{ produto.quantidade_vendida }} un.</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header fw-bold">⭐ Top 5 Clientes (por valor)</div>
+            <ul class="list-group list-group-flush">
+                {% for cliente in top_clientes %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>{{ cliente.nome }}</span>
+                    <span class="badge bg-success rounded-pill">R$ {{ cliente.total_gasto|floatformat:2 }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header fw-bold">📊 Pedidos por Tipo</div>
+            <div class="card-body" style="height: 300px;">
+                <canvas id="graficoTipoEntrega"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header fw-bold">💰 Clientes com Pedidos Não Pagos</div>
+            <div class="card-body">
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -89,6 +165,33 @@
                 maintainAspectRatio: true,
             }
         });
+        const ctxPie = document.getElementById('graficoTipoEntrega')?.getContext('2d');
+        if (ctxPie) {
+            const pieLabels = JSON.parse('{{ pie_chart_labels|safe }}');
+            const pieData = JSON.parse('{{ pie_chart_data|safe }}');
+
+            new Chart(ctxPie, {
+                type: 'pie', // Tipo de gráfico: pizza
+                data: {
+                    labels: pieLabels,
+                    datasets: [{
+                        label: 'Total de Pedidos',
+                        data: pieData,
+                        backgroundColor: [ // Cores para cada fatia
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

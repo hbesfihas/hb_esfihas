@@ -3,13 +3,12 @@
 {% block title %}Cardápio | HB Esfihas{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">🍽️ Cardápio</h2>
-<div class="accordion" id="accordionCategorias">
+<div class="accordion mt-5" id="accordionCategorias">
     {% for categoria in categorias %}
     <div class="accordion-item mb-3 border-0 shadow-sm">
         <h2 class="accordion-header" id="heading-{{ categoria.id }}">
             <button class="accordion-button collapsed accordion-button-custom" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse-{{ categoria.id }}" style="background-color: {{ categoria.cor }};">
+                data-bs-target="#collapse-{{ categoria.id }}" style="background-color:{{categoria.cor}};">
 
                 {% if categoria.icone_bootstrap %}
                 <i class="{{ categoria.icone_bootstrap }} me-2 fs-5"></i>
@@ -72,5 +71,5 @@
 {% endif %}
 </div>
 
-<script src="{% static 'js/gerenciador-sacola.js' %}"></script>
+<script src="{% static 'js/home-controller.js' %}"></script>
 {% endblock %}
