@@ -1,0 +1,206 @@
+body {
+    background-color: #aaaaaa;
+}
+
+/* --- ESTILO PARA O "WIDGET" DE USUÁRIO NA NAVBAR --- */
+.user-widget {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 5px 10px;
+    border-radius: 50px; /* Bordas arredondadas */
+    transition: background-color 0.3s;
+}
+
+.user-widget:hover {
+    background-color: rgba(81, 81, 81, 0.64);
+}
+
+.user-widget .points-icon {
+    color: #ffc107; /* Amarelo do Bootstrap */
+    font-size: 1.2rem;
+    margin-right: 8px;
+}
+
+.user-widget .user-info {
+    font-size: 0.9rem;
+    line-height: 1.2;
+    color: #f8f9fa; /* Texto claro */
+}
+
+.user-widget .user-info small {
+    display: block;
+    color: #adb5bd; /* Cinza claro para os pontos */
+    font-size: 0.8rem;
+}
+.logo{
+    width: 60px;
+    height: auto;
+}
+
+/* --- ESTILOS DO CARD DE PRODUTO --- */
+.product-card {
+    border: none;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1), 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.product-card.esgotado {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.product-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto;
+    display: block;
+}
+
+.product-name {
+    font-weight: 600;
+    margin-top: 12px;
+    font-size: 1rem;
+}
+
+.product-description {
+    font-size: 0.85rem;
+    color: #6c757d;
+    min-height: 40px;
+}
+
+.product-price {
+    font-size: 1.1rem;
+    color: #198754;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+
+/* --- ESTILOS DO ACCORDION PERSONALIZADO --- */
+.accordion-button-custom {
+    color: white;
+    text-shadow: #1e1e1f 2px 1px 3px ;
+}
+.accordion-button-custom:not(.collapsed) {
+    color: white;
+    box-shadow: none;
+}
+.accordion-button-custom::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+.accordion-button-custom:focus {
+    box-shadow: none;
+    border-color: rgba(0,0,0,.125);
+}
+
+/* --- ESTILO DO BOTÃO DESLIZANTE (TOGGLE SWITCH) --- */
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+/* Esconde o checkbox padrão do HTML */
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* O fundo do botão (a "pista" onde o círculo desliza) */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #dc3545; /* Cor de "desligado" (vermelho) */
+    border-radius: 34px;
+    transition: .4s; /* Animação suave */
+}
+
+/* O círculo que desliza */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+/* Quando o checkbox está MARCADO (ligado) */
+input:checked + .slider {
+    background-color: #198754; /* Cor de "ligado" (verde) */
+}
+
+input:checked + .slider:before {
+    /* Move o círculo para a direita */
+    transform: translateX(26px);
+}
+/* Em static/css/estilo.css */
+
+/* --- ESTILOS DOS BOTÕES DE ESCOLHA (ENTREGA/PAGAMENTO) --- */
+.choice-card {
+    border: 2px solid #dee2e6; /* Borda padrão do Bootstrap */
+    border-radius: 0.5rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    text-align: center;
+    /* NOVAS PROPRIEDADES PARA ALINHAMENTO E ALTURA */
+    display: flex; /* Ativa o Flexbox */
+    flex-direction: column; /* Organiza os itens em coluna (ícone em cima, texto em baixo) */
+    justify-content: center; /* Centraliza verticalmente */
+    align-items: center; /* Centraliza horizontalmente */
+    height: 100%; /* Força o card a ocupar toda a altura da sua coluna */
+}
+
+.choice-card:hover {
+    border-color: #0d6efd; /* Azul primário do Bootstrap */
+    background-color: #f8f9fa;
+}
+
+/* Esconde o input de rádio original */
+.choice-card input[type="radio"] {
+    display: none;
+}
+
+/* Estilo para quando o botão está selecionado */
+.choice-card.selected {
+    border-color: #0d6efd;
+    background-color: #e7f1ff; /* Um azul bem claro */
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.choice-card i {
+    font-size: 2rem; /* Ícone grande */
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #0d6efd;
+}
+
+.choice-card span {
+    font-weight: 500;
+}
+.escondido {
+    display: none !important;
+}

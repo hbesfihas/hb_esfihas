@@ -1,0 +1,61 @@
+/* Fundo com degradê */
+body {
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #00008b, #8b0000);
+    font-family: Arial, sans-serif;
+}
+
+/* Estilo do card central */
+.glass-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-align: center;
+}
+
+/* Logo da HB Esfihas */
+.logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    box-shadow: 5px 5px 15px #00000091;
+
+}
+
+/* Botão de login */
+.btn-login {
+    width: 100%;
+    background-color: #8b0000;
+    color: #fff;
+    border: none;
+    box-shadow: 1px 1px 5px #00000091;
+
+}
+
+.btn-login:hover {
+    background-color: #a31a1a;
+}
+
+/* Campos de input */
+.form-control {
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 5px;
+    box-shadow: 5px 5px 15px #00000091;
+
+}
+
+.form-control:focus {
+    background: rgba(255, 255, 255, 0.9);
+}
