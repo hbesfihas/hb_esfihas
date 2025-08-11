@@ -2,9 +2,11 @@
 
 from django.contrib import admin
 from .models import (
-    Categoria, Produto, Bairro, Cliente, Pedido, ItemPedido, 
-    ConfiguracaoLoja, Insumo, ItemReceita
+    Categoria, Produto, Bairro, Cliente, Pedido,
+    ConfiguracaoLoja, Insumo, ItemReceita, WebPushSubscription
 )
+
+admin.site.register(WebPushSubscription)
 
 # Admin para Insumos
 class InsumoAdmin(admin.ModelAdmin):
@@ -19,8 +21,8 @@ class ItemReceitaInline(admin.TabularInline):
 
 # Atualiza o Admin de Produto para incluir a receita
 class ProdutoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'preco','estoque','categoria',  'custo_de_producao', 'disponivel' )
-    list_editable = ('preco', 'disponivel', 'estoque')
+    list_display = ('nome', 'ordem', 'preco','estoque','categoria',  'custo_de_producao', 'disponivel' , 'imagem')
+    list_editable = ('ordem', 'preco', 'disponivel', 'estoque', 'imagem')
     list_filter = ('categoria', 'disponivel')
     search_fields = ('nome', 'descricao')
     readonly_fields = ('custo_de_producao',) # Mostra o custo, mas não permite editar

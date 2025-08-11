@@ -23,7 +23,8 @@
             <div class="accordion-body">
                 <div class="row">
 
-                    {% for produto in categoria.produto_set.all %}
+                    {% for produto in categoria.produtos_ordenados %}
+
                     {% if produto.disponivel %}
                     <div class="col-12 col-md-6 col-lg-4 d-flex align-items-stretch justify-content-center mb-4">
                         <div class="product-card text-center {% if produto.estoque <= 0 %}esgotado{% endif %}"

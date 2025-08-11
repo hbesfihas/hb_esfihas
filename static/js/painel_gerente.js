@@ -1,4 +1,3 @@
-// Arquivo: static/js/painel_gerente.js (Versão Corrigida e Verificada)
 document.addEventListener('DOMContentLoaded', () => {
 
     const listaPedidosEl = document.getElementById('lista-pedidos');
@@ -59,6 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const classesDeCor = ['bg-light', 'bg-warning', 'bg-info', 'bg-primary', 'bg-success', 'bg-secondary', 'text-dark', 'text-white', 'bg-opacity-10', 'bg-opacity-25', 'bg-opacity-50', 'bg-opacity-75'];
                 cardPedido.classList.remove(...classesDeCor);
                 cardPedido.classList.add(...nova_cor_classe.split(' '));
+            }
+            if(novo_status === 'Cancelado'){
+                console.log(`🗑️ Removendo pedido cancelado #${pedido_id} da tela.`);
+
+                // Adiciona uma animação suave
+                cardPedido.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                cardPedido.style.opacity = '0';
+                cardPedido.style.transform = 'scale(0.95)';
+
+                // Remove o elemento do HTML depois que a animação terminar
+                setTimeout(() => { cardPedido.remove(); }, 500);
             }
         }
         if (data.type === 'store_status_update') {
@@ -142,4 +152,93 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleLojaCheckbox) {
         atualizarVisualStatusLoja(toggleLojaCheckbox.checked);
     }
+
+
 });
+// =================================================================================
+// --- LÓGICA DE PUSH NOTIFICATIONS (separada para maior clareza) ---
+// =================================================================================
+
+function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // Função principal de subscrição (CORRIGIDA)
+    async function subscribeUserToPush() {
+        try {
+            const vapidKeyElement = document.getElementById('lista-pedidos');
+            if (!vapidKeyElement) return;
+
+            const vapidPublicKey = vapidKeyElement.dataset.vapidKey;
+            if (!vapidPublicKey) {
+                console.error("ERRO: VAPID Public Key está vazia no HTML!");
+                return;
+            }
+            const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+
+            // 1. Regista o Service Worker
+            await navigator.serviceWorker.register('/serviceworker.js');
+            console.log('Service Worker registado com sucesso.');
+
+            // 2. ESPERA até que o Service Worker esteja pronto e ativo
+            const registration = await navigator.serviceWorker.ready;
+            console.log('Service Worker está ativo e pronto.');
+
+            // 3. AGORA SIM, faz a subscrição com segurança
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: applicationServerKey
+            });
+            console.log('Subscrição Push obtida:', subscription);
+
+            await fetch('/api/save-subscription/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify(subscription),
+            });
+            console.log("Inscrito para notificações push com sucesso!");
+
+        } catch (error) {
+            console.error("Falha ao se inscrever para notificações push:", error);
+        }
+    }
+
+
+    // Inicia o processo quando a página do painel carrega
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log("Permissão para notificações concedida.");
+                subscribeUserToPush();
+            }
+        });
+    }
+
+
+
+

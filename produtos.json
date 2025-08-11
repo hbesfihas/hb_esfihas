@@ -1,0 +1,646 @@
+[
+{
+  "model": "delivery.produto",
+  "pk": 1,
+  "fields": {
+    "nome": "Carne",
+    "descricao": "Carne moída, tomate, alho, sal.",
+    "categoria": 1,
+    "preco": "4.90",
+    "disponivel": true,
+    "imagem": "imagens/1000174524.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 2,
+  "fields": {
+    "nome": "Frango",
+    "descricao": "Frango desfiado, tomate, alho, cúrcuma, sal",
+    "categoria": 1,
+    "preco": "4.90",
+    "disponivel": true,
+    "imagem": "imagens/hh.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 5,
+  "fields": {
+    "nome": "Queijo e Tomate",
+    "descricao": "Queijo muçarela e fatia de tomate sem semente.",
+    "categoria": 1,
+    "preco": "5.75",
+    "disponivel": true,
+    "imagem": "imagens/queijo-tomate_ePPEwHy.JPG",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 8,
+  "fields": {
+    "nome": "Queijo",
+    "descricao": "Queijo muçarela ralado",
+    "categoria": 1,
+    "preco": "5.50",
+    "disponivel": true,
+    "imagem": "imagens/1000174525.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 9,
+  "fields": {
+    "nome": "Cachorro quente",
+    "descricao": "Salsicha picada, molho de tomate e batata palha",
+    "categoria": 1,
+    "preco": "4.90",
+    "disponivel": true,
+    "imagem": "imagens/1000059775.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 16,
+  "fields": {
+    "nome": "Calabresa",
+    "descricao": "Calabresa picada",
+    "categoria": 1,
+    "preco": "4.95",
+    "disponivel": true,
+    "imagem": "imagens/WhatsApp_Image_2025-03-15_at_11.32.15.jpeg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 30,
+  "fields": {
+    "nome": "Frango e Queijo",
+    "descricao": "Frango desfiado e mussarela",
+    "categoria": 13,
+    "preco": "6.50",
+    "disponivel": true,
+    "imagem": "imagens/1000156622.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 31,
+  "fields": {
+    "nome": "Frango e Bacon",
+    "descricao": "Frango desfiado e bacon picado",
+    "categoria": 13,
+    "preco": "6.00",
+    "disponivel": true,
+    "imagem": "imagens/1000164585.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 32,
+  "fields": {
+    "nome": "Carne e Queijo",
+    "descricao": "Carne moída e mussarela",
+    "categoria": 13,
+    "preco": "6.50",
+    "disponivel": true,
+    "imagem": "imagens/1000164594.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 33,
+  "fields": {
+    "nome": "Carne e Bacon",
+    "descricao": "Carne moída com bacon picado por cima",
+    "categoria": 13,
+    "preco": "6.00",
+    "disponivel": true,
+    "imagem": "imagens/1000156626.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 34,
+  "fields": {
+    "nome": "Queijo e Bacon",
+    "descricao": "Mussarela e bacon picado por cima",
+    "categoria": 13,
+    "preco": "7.50",
+    "disponivel": true,
+    "imagem": "imagens/1000156625.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 35,
+  "fields": {
+    "nome": "Queijo e Calabresa",
+    "descricao": "Queijo mussarela e calabresa picada",
+    "categoria": 13,
+    "preco": "6.50",
+    "disponivel": true,
+    "imagem": "imagens/Screenshot_2025-02-26-00-09-20-839_com_VyS7z4i.instagram.android-edit.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 36,
+  "fields": {
+    "nome": "Queijo e Presunto",
+    "descricao": "Mussarela, presunto ralado e oregano",
+    "categoria": 13,
+    "preco": "6.50",
+    "disponivel": false,
+    "imagem": "imagens/1000241240.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 37,
+  "fields": {
+    "nome": "Calabresa e Bacon",
+    "descricao": "Calabresa picada e bacon picado",
+    "categoria": 13,
+    "preco": "6.00",
+    "disponivel": true,
+    "imagem": "imagens/1000130824.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 40,
+  "fields": {
+    "nome": "Romeu e Julieta",
+    "descricao": "Queijo mussarela e pedaços de goiabada",
+    "categoria": 15,
+    "preco": "6.50",
+    "disponivel": true,
+    "imagem": "imagens/IMG_20250322_020325.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 41,
+  "fields": {
+    "nome": "Frango Queijo Bacon",
+    "descricao": "Frango desfiado, bacon e queijo",
+    "categoria": 14,
+    "preco": "7.90",
+    "disponivel": true,
+    "imagem": "imagens/1000240890.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 42,
+  "fields": {
+    "nome": "Carne Queijo Bacon",
+    "descricao": "Carne moída, queijo mussarela e bacon picado",
+    "categoria": 14,
+    "preco": "7.90",
+    "disponivel": true,
+    "imagem": "imagens/1000187332.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 43,
+  "fields": {
+    "nome": "Queijo Calabresa Bacon",
+    "descricao": "Queijo mussarela, calabresa e bacon picados",
+    "categoria": 14,
+    "preco": "8.50",
+    "disponivel": true,
+    "imagem": "imagens/1000241244.png",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 44,
+  "fields": {
+    "nome": "Queijo Presunto Bacon",
+    "descricao": "Queijo mussarela, presunto ralado e bacon picado por cima",
+    "categoria": 14,
+    "preco": "7.50",
+    "disponivel": false,
+    "imagem": "imagens/1000187331.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 45,
+  "fields": {
+    "nome": "Mini Burger",
+    "descricao": "Pãozinho caseiro, hambúrguer caseiro, queijo mussarela e molho caseiro de alho HB",
+    "categoria": 17,
+    "preco": "4.90",
+    "disponivel": true,
+    "imagem": "imagens/1000226960.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 47,
+  "fields": {
+    "nome": "Frango queijo e tomate",
+    "descricao": "Frango desfiado com mussarela e tomate por cima",
+    "categoria": 14,
+    "preco": "7.15",
+    "disponivel": true,
+    "imagem": "imagens/1000240863.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 48,
+  "fields": {
+    "nome": "Carne queijo e tomate",
+    "descricao": "Carne moída, mussarela e tomate por cima",
+    "categoria": 14,
+    "preco": "7.15",
+    "disponivel": true,
+    "imagem": "imagens/1000187336.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 49,
+  "fields": {
+    "nome": "Frango Queijo Presunto",
+    "descricao": "Frango desfiado, mussarela e presunto picado por cima.",
+    "categoria": 14,
+    "preco": "7.50",
+    "disponivel": false,
+    "imagem": "imagens/1000240854.png",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 54,
+  "fields": {
+    "nome": "Cachorro quente,queijo e bacon",
+    "descricao": "Salsicha picada, molho de tomate, batata palha, mussarela e bacon",
+    "categoria": 14,
+    "preco": "7.90",
+    "disponivel": true,
+    "imagem": "imagens/1000240862_QCjlrLN.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 55,
+  "fields": {
+    "nome": "Cachorro quente e queijo",
+    "descricao": "Salsicha picada, molho de tomate, batata palha e mussarela",
+    "categoria": 13,
+    "preco": "6.90",
+    "disponivel": true,
+    "imagem": "imagens/1000240862.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 57,
+  "fields": {
+    "nome": "Mini Queijo",
+    "descricao": "Pãozinho caseiro, queijo e molho de alho caseiro",
+    "categoria": 17,
+    "preco": "4.90",
+    "disponivel": true,
+    "imagem": "imagens/1000188594.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 62,
+  "fields": {
+    "nome": "Nutella",
+    "descricao": "Creme de avelã com cacau \r\nNutella original.",
+    "categoria": 15,
+    "preco": "7.90",
+    "disponivel": true,
+    "imagem": "imagens/1000199061.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 63,
+  "fields": {
+    "nome": "Mini Nutella",
+    "descricao": "Pãozinho recheado com 30 gramas de Nutella original",
+    "categoria": 17,
+    "preco": "5.90",
+    "disponivel": true,
+    "imagem": "imagens/1000226945.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 64,
+  "fields": {
+    "nome": "Queijo e Nutella",
+    "descricao": "Mussarela e Nutella (original)",
+    "categoria": 15,
+    "preco": "7.00",
+    "disponivel": true,
+    "imagem": "imagens/1000240836_fbYJwQk.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 66,
+  "fields": {
+    "nome": "Lasanha",
+    "descricao": "Carne moída, molho de tomate, mussarela e orégano.",
+    "categoria": 13,
+    "preco": "7.00",
+    "disponivel": true,
+    "imagem": "imagens/1000240868.png",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 67,
+  "fields": {
+    "nome": "Cocada com queijo",
+    "descricao": "Queijo, leite condensado e coco ralado integral",
+    "categoria": 15,
+    "preco": "7.00",
+    "disponivel": true,
+    "imagem": "imagens/1000226032.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 69,
+  "fields": {
+    "nome": "Frango, queijo e batata palha",
+    "descricao": "",
+    "categoria": 14,
+    "preco": "7.50",
+    "disponivel": true,
+    "imagem": "imagens/1000241247.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 70,
+  "fields": {
+    "nome": "Cocada",
+    "descricao": "Coco ralado integral e leite condensado",
+    "categoria": 15,
+    "preco": "6.00",
+    "disponivel": true,
+    "imagem": "imagens/1000240829.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 71,
+  "fields": {
+    "nome": "Romeu e Julieta e bacon",
+    "descricao": "Queijo mussarela, goiabada e pedacinhos de bacon",
+    "categoria": 15,
+    "preco": "7.90",
+    "disponivel": true,
+    "imagem": "imagens/1000240850.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 74,
+  "fields": {
+    "nome": "Mini queijo e ovo",
+    "descricao": "Mussarela e ovo feito na chapa",
+    "categoria": 17,
+    "preco": "4.90",
+    "disponivel": true,
+    "imagem": "",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 75,
+  "fields": {
+    "nome": "Mini burguer com ovo",
+    "descricao": "Mussarela, hambúrguer caseiro, e ovo.",
+    "categoria": 17,
+    "preco": "5.50",
+    "disponivel": true,
+    "imagem": "",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 76,
+  "fields": {
+    "nome": "Pãozinho",
+    "descricao": "Pãozinho caseiro. Peso 40g",
+    "categoria": 17,
+    "preco": "0.84",
+    "disponivel": true,
+    "imagem": "",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 78,
+  "fields": {
+    "nome": "Pãozinho com ovo",
+    "descricao": "Pãozinho com ovo feito na chapa",
+    "categoria": 17,
+    "preco": "3.90",
+    "disponivel": true,
+    "imagem": "",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 79,
+  "fields": {
+    "nome": "TRADICIONAL 4",
+    "descricao": "4 ESFIHAS: CARNE, FRANGO, CALABRESA E CACHORRO QUENTE",
+    "categoria": 24,
+    "preco": "17.90",
+    "disponivel": true,
+    "imagem": "imagens/1.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 80,
+  "fields": {
+    "nome": "TRADICIONAIS 6",
+    "descricao": "6 ESFIHAS TRADICIONAIS, CARNE, FRANGO, CALABRESA, CACHORRO QUENTE, QUEIJO E QUEIJO E TOMATE.",
+    "categoria": 24,
+    "preco": "27.90",
+    "disponivel": true,
+    "imagem": "imagens/2.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 81,
+  "fields": {
+    "nome": "ESPECIAIS 10",
+    "descricao": "10 ESFIHAS ESPECIAIS, CARNE E QUEIJO, CARNE E BACON, FRANGO E QUEIJO, FRANGO E BACON, QUEIJO E BACON, QUEIJO E CALABRESA, QUEIJO E PRESUNTO, CALABRESA E BACON,  CACHORRO QUENTE E QUEIJO E LASANHA",
+    "categoria": 24,
+    "preco": "61.90",
+    "disponivel": true,
+    "imagem": "imagens/3.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 82,
+  "fields": {
+    "nome": "Pão de alho",
+    "descricao": "Pãozinho com molho de alho e queijo mussarela",
+    "categoria": 17,
+    "preco": "4.90",
+    "disponivel": true,
+    "imagem": "imagens/IMG_20250528_220629.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 83,
+  "fields": {
+    "nome": "PROMOCIONAL DO DIA",
+    "descricao": "4 ESFIHAS DE CACHORRO QUENTE",
+    "categoria": 24,
+    "preco": "15.90",
+    "disponivel": false,
+    "imagem": "imagens/AQYUE.jpeg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 84,
+  "fields": {
+    "nome": "QUEIJADINHA PRO",
+    "descricao": "4 Esfihas de queijo",
+    "categoria": 24,
+    "preco": "19.90",
+    "disponivel": true,
+    "imagem": "imagens/1000294607.jpg",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 89,
+  "fields": {
+    "nome": "COMBO 10",
+    "descricao": "2 de carne \r\n2 de frango \r\n2 de cachorro quente \r\n2 de calabresa\r\n2 de queijo e tomate",
+    "categoria": 24,
+    "preco": "50.00",
+    "disponivel": false,
+    "imagem": "imagens/1000368434.png",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+},
+{
+  "model": "delivery.produto",
+  "pk": 90,
+  "fields": {
+    "nome": "Guaraná Lata",
+    "descricao": "",
+    "categoria": 25,
+    "preco": "5.00",
+    "disponivel": true,
+    "imagem": "imagens/guarana.webp",
+    "trocavel_por_pontos": false,
+    "pontos_troca": "0"
+  }
+}
+]

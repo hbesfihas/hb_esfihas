@@ -32,28 +32,6 @@
         </div>
     </div>
 
-    <div class="col-lg-4 mb-4">
-        <div class="card shadow-sm">
-            <div class="card-header">
-                Clientes com Pedidos Não Pagos
-            </div>
-            <div class="card-body">
-                {% if clientes_devedores %}
-                <ul class="list-group list-group-flush">
-                    {% for cliente in clientes_devedores %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ cliente.nome }}
-                        <span class="badge bg-danger rounded-pill">R$ {{ cliente.total_nao_pago|floatformat:2 }}</span>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-success">Nenhum cliente com pagamentos pendentes!</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
     <div class="col-md-4">
         <div class="card text-center shadow-sm">
             <div class="card-body">
@@ -125,6 +103,18 @@
         <div class="card shadow-sm">
             <div class="card-header fw-bold">💰 Clientes com Pedidos Não Pagos</div>
             <div class="card-body">
+                 {% if clientes_devedores %}
+                <ul class="list-group list-group-flush">
+                    {% for cliente in clientes_devedores %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ cliente.nome }}
+                        <span class="badge bg-danger rounded-pill">R$ {{ cliente.total_nao_pago|floatformat:2 }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-success text-center">Nenhum cliente com pagamentos pendentes!</p>
+                {% endif %}
             </div>
         </div>
     </div>

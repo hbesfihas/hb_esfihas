@@ -14,19 +14,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-v_7u#k61w0xeyq-#=oibh@35#ch#8^7ra(+m6qbrl#^zzdf1rq"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'www.hbesfihas.com.br',
     'hbesfihas.pythonanywhere.com',
     'hbesfihas.com.br',
     '127.0.0.1',
+    'localhost',
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://localhost:8000",
     "https://www.hbesfihas.com.br",
 ]
 
+WEBPUSH_SETTINGS = {
+    "VAPID_ADMIN_EMAIL": "contato.hbfarm@gmail.com",
+    "VAPID_PUBLIC_KEY": 'BM2toOomEh9VC1xJumqsWSstSYabQeixKHIwXnH3YoSqb_VChPEz5SL02trSh4F5nuxh0c5Z_T29VUEqpuYvsY8',
+    "VAPID_PRIVATE_KEY": 'EDTGoMD5zBF-ED6q20jlN7GPl6ZOlwUFRCw5mrvSByA'
+}
 
 AUTH_USER_MODEL = 'cardapio.Cliente'
 
@@ -43,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "cardapio",
+    "webpush",
 ]
 
 ASGI_APPLICATION = "hb_esfihas.asgi.application"
@@ -139,6 +146,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+WHITENOISE_USE_FINDERS = True
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

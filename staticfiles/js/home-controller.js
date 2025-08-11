@@ -1,3 +1,5 @@
+// Ficheiro: static/js/home-controller.js (O seu código funcional + a nova lógica de scroll)
+
 // =================================================================================
 // FUNÇÕES GLOBAIS - Acessíveis em todo o site
 // =================================================================================
@@ -83,13 +85,11 @@ function renderizarSacolaHome() {
 // =================================================================================
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- ROTEADOR DE PÁGINA ---
-    // Verifica em qual página estamos e executa o código correspondente.
-
     // SE ESTIVER NA PÁGINA INICIAL (home.html)
-    if (document.getElementById('listaSacola')) {
+    const accordionElement = document.getElementById('accordionCategorias');
+    if (accordionElement) {
 
-        // NOVA FUNÇÃO DE VALIDAÇÃO
+        // --- VALIDAÇÃO DA SACOLA ---
         function validarSacolaAoCarregar() {
             console.log("Validando sacola contra o estoque atual...");
             let sacola = JSON.parse(localStorage.getItem('sacola') || '{}');
@@ -125,50 +125,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- INICIALIZAÇÃO DA PÁGINA INICIAL ---
-        validarSacolaAoCarregar(); // 1. Valida a sacola PRIMEIRO
-        renderizarSacolaHome();   // 2. DEPOIS, renderiza a sacola já limpa
-    }
+        validarSacolaAoCarregar();
+        renderizarSacolaHome();
 
-    // SE ESTIVER NA PÁGINA INICIAL (home.html)
-    const btnFinalizar = document.getElementById('btn-finalizar-pedido');
-    if (btnFinalizar) {
-        renderizarSacolaHome(); // Renderiza a sacola ao carregar a página
+        // --- LÓGICA DO SCROLL SUAVE DO ACCORDION (CORRIGIDA E DEFINITIVA) ---
+        // "Ouve" o evento que o Bootstrap dispara DEPOIS de um item ser mostrado
+        accordionElement.addEventListener('shown.bs.collapse', function (event) {
+            // 'event.target' é o div .accordion-collapse que acabou de abrir.
+            // O que queremos é o cabeçalho que vem antes dele.
+            const header = event.target.previousElementSibling;
 
-        btnFinalizar.addEventListener('click', () => {
-            const sacola = JSON.parse(localStorage.getItem('sacola') || '{}');
-            if (Object.keys(sacola).length === 0) {
-                alert("Sua sacola está vazia!");
-                return;
+            if (header) {
+                // Rola suavemente para que o topo do cabeçalho
+                // fique alinhado com o topo da janela.
+                header.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
             }
+        });
 
-            btnFinalizar.textContent = 'Verificando estoque...';
-            btnFinalizar.disabled = true;
-            const csrftoken = getCookie('csrftoken'); // Pega o token de segurança
+        // --- Listener do botão finalizar ---
+        const btnFinalizar = document.getElementById('btn-finalizar-pedido');
+        if (btnFinalizar) {
+            renderizarSacolaHome(); // Renderiza a sacola ao carregar a página
 
-            fetch('/api/validar-estoque/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify(sacola)
-            })
-                .then(response => response.json().then(data => ({ ok: response.ok, data })))
-                .then(({ ok, data }) => {
-                    if (ok) {
-                        window.location.href = "/finalizar/"; // Redireciona se o estoque estiver OK
-                    } else {
-                        alert(data.message);
+            btnFinalizar.addEventListener('click', () => {
+                const sacola = JSON.parse(localStorage.getItem('sacola') || '{}');
+                if (Object.keys(sacola).length === 0) {
+                    alert("Sua sacola está vazia!");
+                    return;
+                }
+
+                btnFinalizar.textContent = 'Verificando estoque...';
+                btnFinalizar.disabled = true;
+                const csrftoken = getCookie('csrftoken'); // Pega o token de segurança
+
+                fetch('/api/validar-estoque/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(sacola)
+                })
+                    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+                    .then(({ ok, data }) => {
+                        if (ok) {
+                            window.location.href = "/finalizar/"; // Redireciona se o estoque estiver OK
+                        } else {
+                            alert(data.message);
+                            btnFinalizar.textContent = 'Finalizar Pedido';
+                            btnFinalizar.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição de validação:', error);
+                        alert('Ocorreu um erro ao verificar o estoque. Tente novamente.');
                         btnFinalizar.textContent = 'Finalizar Pedido';
                         btnFinalizar.disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro na requisição de validação:', error);
-                    alert('Ocorreu um erro ao verificar o estoque. Tente novamente.');
-                    btnFinalizar.textContent = 'Finalizar Pedido';
-                    btnFinalizar.disabled = false;
-                });
-        });
+                    });
+            });
+        }
     }
-}); 
+
+
+});

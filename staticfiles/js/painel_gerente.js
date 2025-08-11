@@ -1,3 +1,4 @@
+
 // Arquivo: static/js/painel_gerente.js (Versão Corrigida e Verificada)
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -59,6 +60,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const classesDeCor = ['bg-light', 'bg-warning', 'bg-info', 'bg-primary', 'bg-success', 'bg-secondary', 'text-dark', 'text-white', 'bg-opacity-10', 'bg-opacity-25', 'bg-opacity-50', 'bg-opacity-75'];
                 cardPedido.classList.remove(...classesDeCor);
                 cardPedido.classList.add(...nova_cor_classe.split(' '));
+            }
+            if(novo_status === 'Cancelado'){
+                console.log(`🗑️ Removendo pedido cancelado #${pedido_id} da tela.`);
+
+                // Adiciona uma animação suave
+                cardPedido.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                cardPedido.style.opacity = '0';
+                cardPedido.style.transform = 'scale(0.95)';
+
+                // Remove o elemento do HTML depois que a animação terminar
+                setTimeout(() => { cardPedido.remove(); }, 500);
             }
         }
         if (data.type === 'store_status_update') {
@@ -142,4 +154,70 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleLojaCheckbox) {
         atualizarVisualStatusLoja(toggleLojaCheckbox.checked);
     }
+
+
 });
+
+
+
+// Em static/js/painel_gerente.js
+
+// ... (todo o seu código existente, como getCookie, WebSocket, etc.) ...
+
+// --- LÓGICA PARA PUSH NOTIFICATIONS (COM DEBUG) ---
+
+function urlBase64ToUint8Array(base64String) { /* ... (código existente) ... */ }
+
+async function subscribeUserToPush() {
+    try {
+        const vapidKeyElement = document.getElementById('lista-pedidos');
+        if (!vapidKeyElement) {
+            console.error("Elemento com a VAPID key não encontrado.");
+            return;
+        }
+
+        const vapidPublicKey = vapidKeyElement.dataset.vapidKey;
+
+        // --- PONTO DE VERIFICAÇÃO CRÍTICO ---
+        console.log("VAPID Key lida do HTML:", vapidPublicKey);
+        if (!vapidPublicKey) {
+            console.error("ERRO: A VAPID Public Key está vazia no HTML! Verifique o seu template e o settings.py.");
+            return;
+        }
+        // ------------------------------------
+
+        const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+
+        const registration = await navigator.serviceWorker.register('/serviceworker.js');
+        console.log('Service Worker registado com sucesso.');
+
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
+        });
+
+        await fetch('/api/save-subscription/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify(subscription),
+        });
+        console.log("Inscrito para notificações push com sucesso!");
+
+    } catch (error) {
+        console.error("Falha ao se inscrever para notificações push:", error);
+    }
+}
+
+// Inicia o processo quando a página do painel carrega
+if ('serviceWorker' in navigator && 'PushManager' in window) {
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            console.log("Permissão para notificações concedida.");
+            subscribeUserToPush();
+        }
+    });
+}
+

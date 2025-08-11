@@ -1,25 +1,27 @@
 from decimal import Decimal
-from django.shortcuts import render, redirect
-from .models import Categoria, Produto, Cliente,Pedido, ItemPedido, Bairro, ConfiguracaoLoja
+from django.shortcuts import render, redirect ,get_object_or_404
+from .models import Categoria, Produto, Cliente,Pedido, ItemPedido, Bairro, ConfiguracaoLoja, WebPushSubscription
 from django.contrib.auth import login, logout
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render, redirect
+from django.http import JsonResponse, HttpResponseBadRequest
 import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.conf import settings
-from django.http import JsonResponse, HttpResponseBadRequest
 from pixqrcodegen import Payload
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.template.loader import render_to_string
-import io 
+import io
 import sys
 from django.utils import timezone
-from django.db.models import Sum, Q, Count, Avg
+from django.db.models import Sum, Q, Count, Prefetch
 from django.db.models.functions import Trunc
 from datetime import timedelta
-from django.db import transaction 
+from django.db import transaction
+from webpush import send_user_notification
+
+def service_worker(request):
+    return render(request, 'serviceworker.js', content_type='application/javascript')
 
 def login_cliente(request):
     if request.method == 'POST':
@@ -39,7 +41,10 @@ def logout_cliente(request):
 def home(request):
     if request.user.is_authenticated:
         cliente = request.user
-        categorias = Categoria.objects.prefetch_related('produto_set').order_by('ordem')
+        produtos_ordenados = Produto.objects.filter(disponivel=True).order_by('ordem')
+        categorias = Categoria.objects.prefetch_related(
+            Prefetch('produto_set', queryset=produtos_ordenados, to_attr='produtos_ordenados')
+        ).order_by('ordem')
         produtos = Produto.objects.all()
         return render(request, 'home.html', {'categorias': categorias, 'produtos': produtos, 'cliente': cliente,})
     else:
@@ -59,8 +64,8 @@ def resumo_pedido(request):
 def pedido_sucesso(request, pedido_id):
     # 1. Busca o pedido no banco de dados
     pedido = get_object_or_404(Pedido, id=pedido_id, cliente=request.user)
-    
-    # 2. GERA O PAYLOAD DO PIX 
+
+    # 2. GERA O PAYLOAD DO PIX
     # Removemos a verificação 'if forma_pagamento == pix'
     payload = Payload(
         nome=settings.NOME_LOJA,
@@ -72,25 +77,25 @@ def pedido_sucesso(request, pedido_id):
     pontos_ganhos = int(pedido.total // 10)
 
     # --- Bloco para capturar a saída do console ---
-    
+
     # Guarda o "console" original em uma variável temporária
     old_stdout = sys.stdout
     # Redireciona a saída do sistema para um "buffer" de texto na memória
     redirected_output = sys.stdout = io.StringIO()
-    
+
     # Executa a função. Em vez de imprimir no seu terminal,
     # ela agora vai imprimir no nosso "buffer" de texto.
     payload.gerarPayload()
-    
+
     # Restaura o "console" original. É muito importante fazer isso!
     sys.stdout = old_stdout
-    
+
     # Pega o que foi "impresso" no buffer e guarda na nossa variável
     pix_payload = redirected_output.getvalue().strip()
-    
+
     # --- Fim do bloco de captura ---
-   
-   
+
+
     context = {
         'pedido': pedido,
         'pix_payload': pix_payload,  # Esta variável agora sempre terá um valor
@@ -130,7 +135,7 @@ def criar_pedido(request):
             # 2. BUSCAR PRODUTOS E VALIDAR ESTOQUE EM UMA ÚNICA PASSAGEM
             ids_produtos = [int(pid) for pid in dados_sacola.keys()]
             produtos_no_db = {p.id: p for p in Produto.objects.filter(id__in=ids_produtos)}
-            
+
             subtotal_pedido = Decimal("0.00")
             for produto_id_str, item_sacola in dados_sacola.items():
                 produto_id = int(produto_id_str)
@@ -141,7 +146,7 @@ def criar_pedido(request):
                 if not produto_db or produto_db.estoque < quantidade_pedida:
                     nome_produto = produto_db.nome if produto_db else f"ID {produto_id}"
                     return HttpResponseBadRequest(f"Desculpe, o produto '{nome_produto}' não tem estoque suficiente.")
-                
+
                 # Recalcula o subtotal com o preço do banco de dados (segurança)
                 subtotal_pedido += produto_db.preco * quantidade_pedida
 
@@ -158,7 +163,7 @@ def criar_pedido(request):
                 taxa_cartao = (subtotal_pedido + valor_frete) * (taxa_percentual / 100)
 
             total_final = subtotal_pedido + valor_frete + taxa_cartao
-            
+
 
 
             # 4. CRIAR O PEDIDO
@@ -176,14 +181,14 @@ def criar_pedido(request):
             for produto_id_str, item_sacola in dados_sacola.items():
                 produto_db = produtos_no_db[int(produto_id_str)]
                 quantidade = int(item_sacola['quantidade'])
-                
+
                 ItemPedido.objects.create(
                     pedido=pedido,
                     produto=produto_db,
                     quantidade=quantidade,
                     subtotal=(produto_db.preco * quantidade).quantize(Decimal("0.01"))
                 )
-                
+
                 # A LÓGICA CORRIGIDA E ADICIONADA:
                 produto_db.estoque -= quantidade
                 produto_db.save(update_fields=['estoque'])
@@ -202,7 +207,7 @@ def criar_pedido(request):
                 cliente.ultimo_bairro = bairro
                 cliente.save(update_fields=['ultimo_endereco', 'ultimo_bairro'])
             # --- FIM DA LÓGICA ---
-            
+
             # 7. NOTIFICAR GERENTES VIA WEBSOCKET
             html_pedido = render_to_string(
                 'partials/card_pedido_gerente.html',
@@ -213,6 +218,35 @@ def criar_pedido(request):
                 'gerentes',
                 {'type': 'novo_pedido', 'pedido_html': html_pedido}
             )
+            # --- ENVIO DA PUSH NOTIFICATION (MÉTODO CORRETO E FINAL) ---
+            print("\n--- [DEBUG PUSH] A iniciar envio de notificação push ---")
+            try:
+                # 1. Encontra todos os utilizadores que são gerentes
+                gerentes = Cliente.objects.filter(is_admin=True)
+                print(f"[DEBUG PUSH] Gerentes encontrados: {[user.nome for user in gerentes]}")
+
+                if gerentes.exists():
+                    payload = {
+                        "head": f"Novo Pedido! #{pedido.id}",
+                        "body": f"Cliente: {pedido.cliente.nome}\nTotal: R$ {pedido.total}",
+                        "icon": request.build_absolute_uri('/static/img/favicon.ico'),
+                        "url": "/painel-gerente/"
+                    }
+                    print("[DEBUG PUSH] Payload da notificação:", payload)
+
+                    # 2. Envia a notificação para cada gerente individualmente.
+                    #    A função send_user_notification sabe como encontrar as subscrições do utilizador.
+                    for gerente in gerentes:
+                        send_user_notification(user=gerente, payload=payload, ttl=1000)
+
+                    print(f"✅ [DEBUG PUSH] Notificação enviada para {gerentes.count()} gerente(s).")
+                else:
+                    print("⚠️ [DEBUG PUSH] Nenhum gerente encontrado para enviar notificação push.")
+
+            except Exception as e:
+                print(f"❌ [DEBUG PUSH] ERRO AO ENVIAR NOTIFICAÇÃO PUSH: {e}")
+            # --- FIM DO BLOCO DE ENVIO ---
+
 
         # Se a transação foi um sucesso, redireciona
         return redirect('pedido_sucesso', pedido_id=pedido.id)
@@ -235,15 +269,15 @@ def painel_gerente(request):
     pago_filtro = request.GET.get('pago', '')
 
     # Começa com todos os pedidos
-    pedidos = Pedido.objects.select_related('cliente', 'bairro').all().order_by('-criado_em')
+    pedidos = Pedido.objects.exclude(status='cancelado').select_related('cliente', 'bairro').order_by('-criado_em')
 
     # Aplica os filtros apenas se um valor foi fornecido
     if cliente_filtro_id:
         pedidos = pedidos.filter(cliente_id=cliente_filtro_id)
-    
+
     if data_filtro:
         pedidos = pedidos.filter(criado_em__date=data_filtro)
-    
+
     if pago_filtro == 'sim':
         pedidos = pedidos.filter(pago=True)
     elif pago_filtro == 'nao':
@@ -257,7 +291,7 @@ def painel_gerente(request):
         data_selecionada = data_filtro
 
     todos_clientes = Cliente.objects.filter(is_admin=False).order_by('nome')
-    
+
     context = {
         'pedidos': pedidos,
         'todos_clientes': todos_clientes,
@@ -281,22 +315,20 @@ def atualizar_status_pedido(request, pedido_id, novo_status):
             'entregue': 'bg-success text-white bg-opacity-75',
             'cancelado': 'bg-secondary text-white bg-opacity-75'
         }
-        
-        channel_layer = get_channel_layer()
-        
-        # Prepara a mensagem uma única vez
+
+        # A mensagem agora tem sempre o mesmo formato
         message_data = {
-            'type': 'status_update',
+            'type': 'status_update', # Sempre envia 'status_update'
             'message': {
                 'pedido_id': pedido_id,
-                'novo_status': pedido.get_status_display(),
+                'novo_status': pedido.get_status_display(), # 'Cancelado', 'Pronto', etc.
                 'nova_cor_classe': STATUS_CORES.get(novo_status, 'bg-light')
             }
         }
-
+        channel_layer = get_channel_layer()
         # 1. Envia para o grupo dos gerentes
         async_to_sync(channel_layer.group_send)('gerentes', message_data)
-        
+
 
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'erro'}, status=405)
@@ -365,10 +397,10 @@ def dashboard_vendas(request):
     # --- 2. CÁLCULO PARA O GRÁFICO (COM NOVOS PERÍODOS) ---
     periodo = request.GET.get('periodo', 'semana') # Padrão: semana
     hoje = timezone.localdate()
-    
+
     # Base da queryset: apenas pedidos pagos
     queryset = Pedido.objects.filter(pago=True)
-    
+
     # Mapeamento de meses para abreviações em português
     meses_pt = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'}
 
@@ -416,7 +448,7 @@ def dashboard_vendas(request):
     top_clientes = Cliente.objects.filter(is_admin=False, pedido__pago=True).annotate(
         total_gasto=Sum('pedido__total')
     ).order_by('-total_gasto')[:5]
-    
+
     # --- 6. DADOS PARA O GRÁFICO DE PIZZA (TIPO DE ENTREGA) ---
     pedidos_por_tipo = Pedido.objects.values('tipo_entrega').annotate(
         total=Count('id')
@@ -459,7 +491,7 @@ def validar_estoque_api(request):
                     # Se um item não tiver estoque, retorna um erro imediatamente
                     mensagem = f"Desculpe, o produto '{produto.nome}' não tem estoque suficiente. Temos apenas {produto.estoque} unidade(s)."
                     return JsonResponse({'status': 'erro', 'message': mensagem}, status=400)
-            
+
             # Se o loop terminar sem erros, o estoque está OK
             return JsonResponse({'status': 'ok'})
 
@@ -467,3 +499,20 @@ def validar_estoque_api(request):
             return JsonResponse({'status': 'erro', 'message': 'Um produto na sua sacola não foi encontrado.'}, status=404)
         except Exception as e:
             return JsonResponse({'status': 'erro', 'message': str(e)}, status=500)
+
+
+@staff_member_required
+def save_webpush_subscription(request):
+    if request.method == 'POST':
+        try:
+            # Pega os dados da subscrição enviados pelo JavaScript
+            subscription_data = json.loads(request.body)
+            # Evita duplicados
+            WebPushSubscription.objects.get_or_create(
+                user=request.user,
+                subscription_info=subscription_data
+            )
+            return JsonResponse({'status': 'ok'})
+        except Exception as e:
+            return JsonResponse({'status': 'erro', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'erro'}, status=405)

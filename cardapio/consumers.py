@@ -32,13 +32,13 @@ class ManagerConsumer(AsyncWebsocketConsumer):
     async def status_update(self, event):
         # Pega a mensagem que veio da view
         message_content = event['message']
-        
+
         # Retransmite a mensagem para o navegador do gerente
         await self.send(text_data=json.dumps({
             'type': 'status_update',
             'message': message_content
         }))
-        
+
  # --- MÉTODO PARA ATUALIZAR STATUS DA LOJA ---
     async def store_status_update(self, event):
         # 1. Primeiro, pegue o dicionário 'message' que a view enviou.
@@ -48,5 +48,15 @@ class ManagerConsumer(AsyncWebsocketConsumer):
         # O JavaScript no frontend saberá como ler 'message.loja_aberta'.
         await self.send(text_data=json.dumps({
             'type': 'store_status_update',
+            'message': message_content
+        }))
+
+    async def pedido_cancelado(self, event):
+        message_content = event['message']
+
+        #Retransmite a mensagem de cancelamento para o navegador
+
+        await self.send(text_data=json.dumps({
+            'type':'pedido_cancelado',
             'message': message_content
         }))

@@ -37,11 +37,11 @@
         <h5 class="mb-3">Total: R$ {{ pedido.total|floatformat:2 }}</h5>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span id="status-pago-{{ pedido.id }}" 
+                    <span id="status-pago-{{ pedido.id }}"
                           class="badge {% if pedido.pago %}bg-success{% else %}bg-danger{% endif %}">
                         {% if pedido.pago %}PAGO{% else %}NÃO PAGO{% endif %}
                     </span>
-                    <button type="button" 
+                    <button type="button"
                             class="btn btn-sm {% if pedido.pago %}btn-outline-danger{% else %}btn-outline-success{% endif %} btn-toggle-pago"
                             data-pedido-id="{{ pedido.id }}">
                         {% if pedido.pago %}Marcar como Não Pago{% else %}Marcar como Pago{% endif %}

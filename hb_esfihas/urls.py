@@ -1,20 +1,21 @@
 # Arquivo: hb_esfihas/urls.py
 
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
+from django.urls import re_path
+from django.views.static import serve
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 # Importe apenas as views que você realmente usa
 from cardapio.views import (
-    home, criar_pedido, 
-    login_cliente, resumo_pedido, 
-    pedido_sucesso, meus_pedidos, 
-    atualizar_status_pedido, 
+    home, criar_pedido,
+    login_cliente, resumo_pedido,
+    pedido_sucesso, meus_pedidos,
+    atualizar_status_pedido,
     painel_gerente, imprimir_pedido,
     toggle_loja_status_api, toggle_pago_status_api,
-    logout_cliente, dashboard_vendas, validar_estoque_api
+    logout_cliente, dashboard_vendas, validar_estoque_api, save_webpush_subscription, service_worker
 )
 
 urlpatterns = [
@@ -33,9 +34,16 @@ urlpatterns = [
     path('api/toggle-pago-status/<int:pedido_id>/', toggle_pago_status_api, name='toggle_pago_status_api'),  # Nova URL para alternar status pago
     path('dashboard/', dashboard_vendas, name='dashboard_vendas'),
     path('api/validar-estoque/', validar_estoque_api, name='validar_estoque_api'),  # Nova URL para validar estoque
-    
+    path('api/save-subscription/', save_webpush_subscription, name='save_webpush_subscription'),
+    path('serviceworker.js', service_worker, name='service_worker'),
+
 ]
 
-# Adiciona as URLs para servir arquivos estáticos e de mídia em modo de desenvolvimento
+# --- CONFIGURAÇÃO CORRETA E ROBUSTA PARA FICHEIROS ESTÁTICOS E DE MÍDIA ---
+# Esta linha serve os seus ficheiros estáticos (CSS, JS) através do WhiteNoise
 urlpatterns += staticfiles_urlpatterns()
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {
+        'document_root': settings.MEDIA_ROOT,
+    }),
+]

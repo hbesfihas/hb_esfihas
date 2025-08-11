@@ -5,6 +5,20 @@
 {% block content %}
 <h2 class="text-center mb-4">📋 Painel de Pedidos</h2>
 
+<div class="card card-body mb-4 text-center">
+    <h5 class="card-title">Status da Loja</h5>
+    <div class="d-flex justify-content-center align-items-center mt-2">
+        <span class="me-3 fs-5 fw-bold text-danger" id="status-fechada">FECHADA</span>
+
+        <label class="toggle-switch">
+            <input type="checkbox" id="toggle-loja-checkbox" {% if configuracao_loja.loja_aberta %}checked{% endif %}>
+            <span class="slider"></span>
+        </label>
+
+        <span class="ms-3 fs-5 fw-bold text-success" id="status-aberta">ABERTA</span>
+    </div>
+</div>
+
 <div class="card card-body mb-4">
     <form method="GET" action="{% url 'painel_gerente' %}" class="row g-3 align-items-end">
         <div class="col-md-3">
@@ -40,7 +54,7 @@
     </div>
 </div>
 
-<div id="lista-pedidos">
+<div id="lista-pedidos" data-vapid-key="BM2toOomEh9VC1xJumqsWSstSYabQeixKHIwXnH3YoSqb_VChPEz5SL02trSh4F5nuxh0c5Z_T29VUEqpuYvsY8">
     {% for pedido in pedidos %}
         {% include 'partials/card_pedido_gerente.html' with pedido=pedido %}
     {% empty %}

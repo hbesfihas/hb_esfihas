@@ -6,14 +6,14 @@ body {
 .user-widget {
     display: flex;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(43, 43, 43, 0.116);
     padding: 5px 10px;
     border-radius: 50px; /* Bordas arredondadas */
     transition: background-color 0.3s;
 }
 
 .user-widget:hover {
-    background-color: rgba(81, 81, 81, 0.64);
+    background-color: rgba(0, 0, 0, 0.64);
 }
 
 .user-widget .points-icon {
@@ -25,12 +25,12 @@ body {
 .user-widget .user-info {
     font-size: 0.9rem;
     line-height: 1.2;
-    color: #f8f9fa; /* Texto claro */
+    color: #000000; /* Texto claro */
 }
 
 .user-widget .user-info small {
     display: block;
-    color: #adb5bd; /* Cinza claro para os pontos */
+    color: #363636; /* Cinza claro para os pontos */
     font-size: 0.8rem;
 }
 .logo{
@@ -47,6 +47,7 @@ body {
     background-color: #ffffff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    width: 250px;
 }
 
 .product-card:hover {
@@ -66,6 +67,8 @@ body {
     object-fit: cover;
     margin: 0 auto;
     display: block;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28), 0 8px 20px rgba(0, 0, 0, 0.26);
+
 }
 
 .product-name {

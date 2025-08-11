@@ -2,7 +2,6 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
-
 class Bairro(models.Model):
     nome = models.CharField(max_length=100)
     valor_frete = models.DecimalField(max_digits=5, decimal_places=2)
@@ -101,7 +100,8 @@ class Produto(models.Model):
     disponivel = models.BooleanField(default=True)
     estoque = models.PositiveIntegerField(default=0)  # Quantidade em estoque
     insumos = models.ManyToManyField(Insumo, through=ItemReceita)
-    
+    ordem = models.PositiveIntegerField(default=0, help_text="Use 0, 1, 2... para definir a ordem de exibição")
+
     # Nova função para calcular o custo do produto
     def custo_de_producao(self):
         custo_total = Decimal(0)
@@ -143,16 +143,16 @@ class Pedido(models.Model):
     troco_para = models.DecimalField(max_digits=8, decimal_places=0, null=True, blank=True)
     def __str__(self):
         return f"Pedido #{self.id} de {self.cliente.nome} - {self.criado_em.strftime('%d/%m %H:%M')}"
-    
+
 class ItemPedido(models.Model):
     pedido = models.ForeignKey(Pedido, related_name='itens', on_delete=models.CASCADE)
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
     quantidade = models.PositiveIntegerField(default=1)
     subtotal = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
-    
+
     def __str__(self):
         return f"{self.quantidade}x {self.produto.nome}"
-   
+
 
 class ConfiguracaoLoja(models.Model):
     loja_aberta = models.BooleanField(default=True)
@@ -162,7 +162,12 @@ class ConfiguracaoLoja(models.Model):
         super(ConfiguracaoLoja, self).save(*args, **kwargs)
     def __str__(self):
         return "Configuração da Loja"
-    
-    
 
-    
+
+
+class WebPushSubscription(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="webpush_subscriptions")
+    subscription_info = models.JSONField()
+
+    def __str__(self):
+        return self.user.nome
