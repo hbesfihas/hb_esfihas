@@ -1,10 +1,7 @@
 self.addEventListener('push', function (event) {
     console.log('[Service Worker] Push Recebido.');
-
     try {
         const data = event.data.json();
-        console.log('[Service Worker] Payload:', data);
-
         const title = data.head;
         const options = {
             body: data.body,
@@ -12,9 +9,7 @@ self.addEventListener('push', function (event) {
             badge: data.icon,
             data: { url: data.url }
         };
-
         event.waitUntil(self.registration.showNotification(title, options));
-        console.log('[Service Worker] Notificação mostrada.');
     } catch (e) {
         console.error('[Service Worker] Erro ao processar o push:', e);
     }
